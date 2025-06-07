@@ -5,113 +5,222 @@ alwaysApply: true
 ---
 # NBA Trade Consigliere - Cursor AI Rules
 
-You are an expert AI programming assistant specializing in NBA analytics and simulation applications for the **NBA Trade Consigliere** project.
+You are an expert AI programming assistant specializing in NBA analytics and AI-powered trade simulation for the **NBA Trade Consigliere** project.
 
 ## 🏀 Project Context
 
-**NBA Trade Consigliere** is an AI-powered webapp that lets users create hypothetical NBA trades and simulate how they would have impacted the **2023-24 NBA playoffs**. Users explore "what if" scenarios through natural language queries powered by Google Gemini AI.
+**NBA Trade Consigliere** is an AI-powered webapp that lets users create hypothetical NBA trades and simulate how they would have impacted the **2023-24 NBA playoffs**. Users explore "what if" scenarios through natural language queries powered by Google Gemini AI with full salary cap compliance.
 
 - **Hackathon**: [AI in Action](mdc:https:/ai-in-action.devpost.com)
 - **Repository**: https://github.com/jakedibattista/nbaaiinaction
-- **Status**: MVP database complete, building trade simulation engine
+- **Status**: 🎯 **Database Complete** → Building AI Agent & React UX
 
 ## 🚀 Technology Stack
 
 - **Backend**: Node.js + Express.js
-- **Database**: MongoDB Atlas (optimized with 11 indexes)
-- **Frontend**: React.js + TypeScript
-- **AI**: Google Gemini API
-- **Data**: 2023-24 NBA season (213 players + 15 playoff series)
+- **Database**: MongoDB Atlas (15 optimized indexes, 99.5% salary coverage)
+- **Frontend**: React.js + TypeScript *(Current Focus)*
+- **AI**: Google Gemini API with NBA context *(Current Focus)*
+- **Data**: Complete 2023-24 season + CBA compliance
 
-## 📊 Current Database Implementation
+## 🏆 Complete Database Implementation
 
-### ✅ **Players Collection** (213 players)
+### ✅ **Players Collection** (213/214 players with salary data)
 ```javascript
 {
-  name: "Jayson Tatum",
-  team: "Bos", 
-  position: "F",
+  name: "Luka Dončić",
+  team: "Dal", 
+  position: "G",
+  salary_2023_2024: 40100000,  // Real contract data
   stats_2023_2024: {
-    points_per_game: 25.2,
-    rebounds_per_game: 10.1,
-    assists_per_game: 6.2,
+    points_per_game: 32.4,
+    rebounds_per_game: 9.1,
+    assists_per_game: 9.8,
     field_goal_percentage: 0.473,
-    // ... complete stats
+    // ... complete statistical profile
   }
 }
 ```
 
-### ✅ **Playoff Series Collection** (15 series)
+### ✅ **CBA Rules Collection** (Complete 2023 NBA compliance)
+```javascript
+{
+  year: 2023,
+  salary_cap: 136021000,      // $136.0M
+  luxury_tax: 165294000,      // $165.3M  
+  first_apron: 172346000,     // $172.3M
+  second_apron: 182794000,    // $182.8M
+  trade_rules: {
+    first_apron_restrictions: [/* detailed rules */],
+    second_apron_restrictions: [/* severe restrictions */]
+  }
+}
+```
+
+### ✅ **Playoff Series Collection** (15 complete series)
 ```javascript
 {
   series_id: "finals-celtics-mavs",
   round: "NBA Finals",
   winner: { name: "Boston Celtics", games_won: 4 },
   loser: { name: "Dallas Mavericks", games_won: 1 },
-  betting_odds: {
-    team1_moneyline: -210,
-    source: "estimated" // transparent about data quality
-  },
   upset: false
 }
 ```
 
-## 🏆 Key 2023-24 Context
+## 🎯 Current Development Focus
 
-- **Champions**: Boston Celtics (64-18, Tatum/Brown)
-- **Finals**: Celtics beat Mavericks 4-1
-- **Major Upsets**: Mavs (5) beat Thunder (1), Pacers (6) to Conference Finals
-- **Top Scorers**: Embiid 33.0 PPG, Brunson 32.4 PPG, Lillard 31.3 PPG
+### 🔥 **Phase 2: AI Agent Development** *(PRIORITY)*
+- **Enhanced Gemini Integration**: Context-aware NBA trade analysis
+- **Natural Language Processing**: "Trade X for Y" → Full analysis
+- **Salary Cap Intelligence**: Real-time CBA compliance checking
+- **Multi-team Trade Logic**: Complex 3+ team scenarios
 
-## ⚡ Performance Optimizations
+### 🎨 **Phase 3: React UX** *(SECONDARY)*
+- **Modern React Components**: TypeScript + hooks
+- **Interactive Trade Builder**: Drag-and-drop interface
+- **Real-time Visualizations**: Salary cap charts, team rosters
+- **Mobile-first Design**: Beautiful responsive experience
 
-**11 Database Indexes Implemented:**
+## 🤖 AI Agent Requirements
+
+### 🧠 **Natural Language Understanding**
+```
+Input: "What if Dallas traded Luka for Jayson Tatum?"
+Output: 
+- Salary Analysis: Luka ($40.1M) vs Tatum ($34.8M)
+- Cap Impact: Dallas saves $5.3M, Boston over Second Apron
+- Trade Validation: CBA compliant? Yes/No + reasons
+- Playoff Simulation: How Finals change with role reversal
+```
+
+### 📊 **Complex Trade Intelligence**
+```
+Input: "Show me trades to get Warriors under luxury tax"
+AI Process:
+1. Query Warriors current payroll ($180M+)
+2. Identify luxury tax threshold ($165.3M)
+3. Find $15M+ in salary to dump
+4. Suggest realistic trade partners
+5. Validate all trades for CBA compliance
+```
+
+### 🏆 **Championship Impact Analysis**
+```
+Input: "Could Miami have beaten Boston with better rebounding?"
+AI Process:
+1. Analyze Miami's rebounding weaknesses vs Boston
+2. Find available rebounders within salary constraints
+3. Simulate regular season impact
+4. Project playoff seeding changes
+5. Recalculate championship probability
+```
+
+## ⚡ Database Performance
+
+**15 Optimized Indexes (Sub-100ms queries):**
 - `name_1` - Player lookups (77ms avg)
-- `team_1` - Roster queries (instant)
-- `stats_2023_2024.points_per_game_-1` - Scoring leaders
-- Compound indexes for trade analysis
+- `salary_2023_2024_-1` - High-salary queries (76ms)
+- `team_1_salary_2023_2024_-1` - Roster analysis (75ms)
+- `position_1_salary_2023_2024_-1` - Positional trades
+- Compound indexes for complex aggregations
 
-## 🎯 Development Priorities
+## 💰 Salary Cap Context (2023-24 Season)
 
-1. **✅ Database Setup**: Complete with 213 players + 15 series
-2. **🔄 Trade Simulation Engine**: Core logic (CURRENT FOCUS)
-3. **🔄 Gemini AI Integration**: Natural language processing
-4. **🔄 React Frontend**: User interface
+### 🚨 **Apron Teams** (Trade Restricted)
+- **Second Apron** ($182.8M+): Cannot aggregate salaries
+- **First Apron** ($172.3M+): Cannot take back more than sent out
+- **Luxury Tax** ($165.3M+): Repeater penalties apply
 
-## 💡 Example Trade Scenarios
-
-```
-"What if Lakers traded for Damian Lillard?"
-→ Analyze impact on Lakers vs Nuggets first round series
-
-"How would trading Jayson Tatum change the Finals?"
-→ Simulate Celtics vs Mavs without their leading scorer
-```
+### 💡 **Key Trade Scenarios**
+- **Boston Celtics**: Championship team at Second Apron
+- **Golden State Warriors**: Aging core, luxury tax decisions
+- **Phoenix Suns**: Star talent, salary cap constraints
+- **Dallas Mavericks**: Finals team, flexible salary structure
 
 ## 🛠 Technical Guidelines
 
-- Use MongoDB aggregation for complex player/team analysis
-- Leverage 11 indexes for real-time performance
-- Reference actual 2023-24 playoff results for credibility
+### 🎯 **AI Agent Development**
+- Use MongoDB aggregation for complex salary analysis
+- Leverage Gemini API for natural language understanding
+- Implement CBA rule validation for all trades
+- Cache common queries for performance
+- Design for real-time user interactions
+
+### 🎨 **React UX Development**
+- Modern TypeScript components with proper types
+- Real-time data updates via React hooks
+- Beautiful, mobile-first design patterns
+- Interactive visualizations (salary caps, team rosters)
+- Seamless integration with AI agent responses
+
+### 📊 **Basketball Accuracy**
+- Reference actual 2023-24 playoff results
+- Use verified salary data (99.5% coverage)
+- Implement real CBA compliance rules
 - Maintain data transparency (verified vs estimated)
-- Design for hackathon MVP, expand later
 
-## 📁 Project Structure
+## 📁 Current Project Structure
 
 ```
-scripts/
-├── import-2023-2024-stats.js     # Player data import
-├── add-2023-24-playoff-data.js   # Playoff series
-├── optimize-database-indexes.js  # Performance
-└── test-celtics-roster.js        # Query testing
-
-data/
-└── NBA Stats 202324... .csv       # Source data
-
-server/     # Express backend
-client/     # React frontend
+nbaaiinaction/
+├── scripts/
+│   └── gemini-api-layer.js         # AI integration core
+├── server/                         # Express.js API (Next)
+│   ├── routes/                     # Trade endpoints
+│   ├── utils/                      # CBA validation
+│   └── models/                     # MongoDB schemas
+├── client/                         # React frontend (Next)
+│   ├── components/                 # UI components
+│   ├── hooks/                      # Custom React hooks
+│   └── services/                   # API integration
+└── data/                           # Archived CSV files
 ```
 
+## 🎮 Example Development Tasks
+
+### 🤖 **AI Agent Tasks**
+```javascript
+// Enhance gemini-api-layer.js
+const analyzeTradeImpact = async (tradeQuery) => {
+  // 1. Parse natural language trade request
+  // 2. Validate salary cap compliance
+  // 3. Calculate playoff impact
+  // 4. Generate comprehensive response
+}
+```
+
+### ⚛️ **React UX Tasks**
+```typescript
+// Create TradeBuilder component
+interface TradeBuilderProps {
+  onTradeSubmit: (trade: TradeScenario) => void;
+  salaryCap: CBAData;
+  availablePlayers: Player[];
+}
+```
+
+## 🏆 Success Metrics
+
+### ✅ **Technical Achievements**
+- **Database**: 99.5% salary coverage, 15 indexes, sub-100ms queries
+- **CBA**: Complete 2023 rule implementation
+- **Performance**: Production-ready, optimized architecture
+
+### 🎯 **User Experience Goals**
+- **Intuitive**: Natural language → instant realistic results
+- **Accurate**: All trades pass real CBA validation
+- **Engaging**: Beautiful, interactive trade scenarios
+- **Mobile**: Seamless experience on all devices
+
+## 🚀 Hackathon Philosophy
+
+**Focus Areas:**
+1. **AI Intelligence**: Make complex NBA trades simple through natural language
+2. **Basketball Accuracy**: Every simulation grounded in real 2023-24 data
+3. **User Delight**: Beautiful, intuitive interface that makes trading fun
+4. **Technical Excellence**: Production-ready code that performs flawlessly
 
 
-Always prioritize basketball accuracy, performance optimization, and hackathon timeline constraints in your assistance.
+
+Always prioritize **user experience**, **basketball accuracy**, and **AI sophistication** in your development assistance.
