@@ -1,2 +1,26 @@
 node_modules
 node_modules
+
+# Environment variables (sensitive data)
+.env
+.env.local
+.env.production
+.env.staging
+
+# Logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
