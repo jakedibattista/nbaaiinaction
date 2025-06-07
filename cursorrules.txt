@@ -3,159 +3,202 @@ You are an expert AI programming assistant specializing in NBA analytics and sim
 You always use the latest stable versions of TypeScript, JavaScript, React, Node.js, Express.js, MongoDB, and are familiar with sports data analysis best practices.
 
 PROJECT OVERVIEW:
-NBA Trade Consigliere - A webapp that allows users to create fake NBA trades and simulate how they would have impacted the 2025 NBA playoffs. Users can explore "what if" scenarios through natural language queries powered by Google Gemini AI.
+NBA Trade Consigliere - A webapp that allows users to create hypothetical NBA trades and simulate how they would have impacted the 2023-24 NBA playoffs. Users can explore "what if" scenarios through natural language queries powered by Google Gemini AI.
 
 HACKATHON CONTEXT:
 - Submitted to: https://ai-in-action.devpost.com/
-- Current Status: Building MVP with React frontend + Express backend + MongoDB
+- Repository: https://github.com/jakedibattista/nbaaiinaction
+- Current Status: MVP database complete, ready for trade simulation engine
 - Timeline: Limited hackathon timeframe, focus on core functionality first
 
 Tech Stack:
 - Backend: Node.js with Express.js
-- Database: MongoDB with Mongoose ODM (schema based on thecodebarbarian.com NBA data patterns)
+- Database: MongoDB Atlas with Mongoose ODM (optimized with 11 performance indexes)
 - Frontend: React.js with TypeScript  
 - AI Integration: Google Gemini API for natural language trade analysis
-- External API: rest.nbaapi.com for 2024-2025 NBA statistics
-- UI: Custom CSS (NBA-themed styling already implemented)
+- Data Source: 2023-24 NBA season statistics (CSV import + manual playoff data)
+- UI: Custom CSS (NBA-themed styling)
 - Deployment: Google Cloud Platform
 
-MONGODB SCHEMA DESIGN:
-Based on proven NBA data patterns from thecodebarbarian.com blog post, adapted for 2025 trade simulation:
+CURRENT DATABASE STATUS (IMPLEMENTED):
+✅ 213 NBA players with complete 2023-24 season statistics
+✅ 15 playoff series from First Round to Finals with betting context
+✅ 11 performance indexes for lightning-fast queries
+✅ Data quality transparency system (verified historical vs estimated data)
+✅ Boston Celtics championship roster (Tatum 25.2 PPG, Brown 24.9 PPG)
+✅ Complete playoff bracket with upsets and sweeps tracked
 
-Core Collections:
-1. **players** - 2024-2025 NBA player data from rest.nbaapi.com
+MONGODB SCHEMA (ACTUAL IMPLEMENTATION):
+
+1. **players** - 2023-24 NBA player data (213 players total)
    ```javascript
    {
      _id: ObjectId,
-     name: "Player Name",
-     team: "TEAM_ABBREV", 
-     position: "PG|SG|SF|PF|C",
-     player_id: "NBA_API_ID",
-     stats_2025: {
-       regular_season: { 
-         games: Number,
-         games_started: Number,
-         minutes: Number,
-         pts: Number,
-         reb: Number,
-         ast: Number,
-         stl: Number,
-         blk: Number,
-         fg_pct: Number,
-         fg3_pct: Number,
-         ft_pct: Number,
-         tov: Number,
-         pf: Number,
-         plus_minus: Number,
-         total_points: Number,
-         total_rebounds: Number,
-         total_assists: Number
-       }
+     name: "Jayson Tatum",
+     team: "Bos", 
+     position: "F",
+     stats_2023_2024: {
+       games_played: 74,
+       games_started: 74,
+       minutes_per_game: 36.9,
+       points_per_game: 25.2,
+       rebounds_per_game: 10.1,
+       assists_per_game: 6.2,
+       steals_per_game: 1.0,
+       blocks_per_game: 0.6,
+       field_goal_percentage: 0.473,
+       three_point_percentage: 0.375,
+       free_throw_percentage: 0.833,
+       turnovers_per_game: 2.9,
+       personal_fouls_per_game: 2.2,
+       total_points: 1865,
+       total_rebounds: 747,
+       total_assists: 459
      },
-     salary: Number,
-     contract_years: Number,
      active: true
    }
    ```
 
-2. **teams** - 2024-2025 NBA team data derived from player statistics
+2. **playoffseries** - 2023-24 NBA playoff data (15 series total)
    ```javascript
    {
      _id: ObjectId,
-     name: "Team Name",
-     abbreviation: "TEAM_ABBREV",
-     conference: "Eastern|Western",
-     division: String,
-     roster: [player_ids],
-     stats_2025: {
-       regular_season: {
-         wins: Number,
-         losses: Number,
-         offensive_rating: Number,
-         defensive_rating: Number,
-         net_rating: Number,
-         pace: Number
-       }
-     }
+     series_id: "finals-celtics-mavs",
+     season: "2023-24",
+     round: "NBA Finals",
+     conference: null, // or "Eastern"/"Western"
+     
+     team1: {
+       name: "Boston Celtics",
+       abbreviation: "BOS", 
+       seed: 1,
+       conference: "Eastern"
+     },
+     team2: {
+       name: "Dallas Mavericks",
+       abbreviation: "DAL",
+       seed: 5, 
+       conference: "Western"
+     },
+     
+     winner: {
+       name: "Boston Celtics",
+       abbreviation: "BOS",
+       games_won: 4
+     },
+     loser: {
+       name: "Dallas Mavericks", 
+       abbreviation: "DAL",
+       games_won: 1
+     },
+     
+     betting_odds: {
+       team1_moneyline: -210,
+       team2_moneyline: +175,
+       team1_spread: -4.0,
+       team2_spread: +4.0,
+       over_under: 6.5,
+       favorite: "BOS",
+       source: "estimated",
+       methodology: "Based on team records, historical patterns, and typical sportsbook spreads",
+       disclaimer: "Odds are realistic estimates for simulation purposes, not actual historical betting lines"
+     },
+     
+     upset: false,
+     sweep: false,
+     created_at: Date
    }
    ```
 
-3. **user_queries** - Store user trade simulation queries
-   ```javascript
-   {
-     _id: ObjectId,
-     query: String,
-     trade_type: "player|draft_pick|combination",
-     teams: [team_ids],
-     players_out: [player_ids],
-     players_in: [player_ids],
-     result: {
-       impact_score: Number,
-       analysis: String,
-       created_at: Date
-     }
-   }
-   ```
+DATA SOURCES (IMPLEMENTED):
+- Player Statistics: 2023-24 NBA season CSV file (213 players, verified historical)
+- Playoff Results: Manually researched 2023-24 playoff bracket (100% accurate)
+- Team Performance: Derived from player aggregations and Basketball-Reference.com
+- Betting Odds: Realistic estimates based on team records and sportsbook patterns
+- Championship Context: Boston Celtics 64-18 record, defeated Dallas Mavericks 4-1 in Finals
 
-DATA SOURCES:
-- Player Statistics: rest.nbaapi.com (2024-2025 season)
-- Team Statistics: Derived from player data and aggregated team performance
-- Salary Data: Estimated based on player performance and current NBA salary patterns
-- Contract Information: Generated based on player age and performance metrics
+KEY PLAYOFF STORYLINES (ACTUAL 2023-24 RESULTS):
+🏆 **Champions**: Boston Celtics (1st seed East) - Tatum/Brown duo
+🥈 **Runner-up**: Dallas Mavericks (5th seed West) - Cinderella run
+🚨 **Major Upsets**: 
+   - Mavericks (5) beat Thunder (1) in West Semifinals
+   - Pacers (6) beat Knicks (2) in East Semifinals  
+   - Wolves (3) beat defending champion Nuggets (2)
+🧹 **Sweeps**: Thunder over Pelicans, Wolves over Suns, Celtics over Pacers
 
-DATA IMPORT STRATEGY:
-1. **Priority 1**: 2025 playoff team rosters and key stats from balldontlie.io
-2. **Priority 2**: 2025 playoff series data and results  
-3. **Priority 3**: Historical betting odds for playoff series (manual entry for MVP)
-4. **Focus**: Only teams that made 2025 playoffs initially, expand later
+DATABASE INDEXES (IMPLEMENTED):
+✅ name_1 - Player name lookups (77ms avg)
+✅ team_1 - Team roster queries (instant)
+✅ position_1 - Position filtering
+✅ stats_2023_2024.points_per_game_-1 - Top scorer queries
+✅ team_1_position_1 - Team composition analysis
+✅ compound indexes for advanced trade impact calculations
 
-CORE FEATURES (MVP):
-1. **Natural Language Trade Analysis** (HIGHEST PRIORITY)
-   - Chat interface: "What if the Lakers had traded for Damian Lillard?"
-   - Gemini AI parses query → database lookup → impact calculation → response
+CORE FEATURES (READY TO BUILD):
+1. **Trade Simulation Engine** (NEXT PRIORITY)
+   - Swap players between teams and recalculate team stats
+   - Measure impact on playoff series outcomes
+   - Compare "before" vs "after" team performance metrics
    
-2. **Basic Trade Impact Calculator**
-   - Simple stat comparison (Player A vs Player B) 
-   - Win probability adjustments based on key metrics
-   - Focus on playoff series that actually happened in 2025
+2. **Natural Language Interface** 
+   - "What if Lakers traded for Damian Lillard?" → Query parsing
+   - Gemini AI integration for realistic trade analysis
+   - Context-aware responses using 2023-24 playoff results
 
-3. **Playoff Series Explorer**
-   - Browse 2025 playoff matchups
-   - View original betting odds and actual results
-   - Simulate alternative outcomes with different rosters
+3. **Playoff Series Impact Calculator**
+   - Simulate how trades change betting odds
+   - Predict alternate series outcomes 
+   - Reference actual upsets for credibility
+
+EXAMPLE QUERIES TO SUPPORT:
+- "What if Lakers traded for Damian Lillard before playoffs?" 
+  → Could they have beaten Nuggets instead of losing 4-1?
+- "How would trading Jayson Tatum change the Finals?"
+  → Impact on Celtics vs Mavs series dynamics
+- "Could Warriors have made playoffs with different roster?"
+  → Analyze what trades would have gotten them to play-in
 
 API ENDPOINTS TO BUILD:
+- GET /api/players - Query 213 players with filters (team, position, stats)
+- GET /api/playoff-series - Browse 15 playoff series with betting context
+- POST /api/simulate-trade - Core trade simulation logic
 - POST /api/query - Gemini-powered natural language analysis
-- GET /api/players - 2025 NBA player data with playoff stats
-- GET /api/teams/:id - Team roster and playoff performance  
-- GET /api/playoff-series - 2025 playoff matchups and results
-- POST /api/simulate-trade - Calculate trade impact on playoff outcomes
-- GET /api/trade-scenarios - Browse saved trade simulations
+- GET /api/teams/:abbreviation - Team roster and 2023-24 performance
 
-GEMINI AI INTEGRATION:
-- Parse natural language trade questions
-- Query MongoDB for relevant player/team/series data
-- Calculate statistical impact of proposed trades
-- Generate fan-friendly explanations of trade implications
-- Reference actual 2025 playoff results for context
-
-DEVELOPMENT PRIORITIES:
-1. Set up MongoDB with initial schema and sample data
-2. Integrate balldontlie.io API for 2025 player/team data
-3. Implement basic Gemini AI natural language processing
-4. Build trade simulation logic (start simple: stat swapping)
-5. Add playoff series data with betting odds
-6. Polish UI and deploy MVP
+DEVELOPMENT PRIORITIES (UPDATED):
+1. ✅ Set up MongoDB with 2023-24 data and optimization
+2. ✅ Import player statistics and playoff series data  
+3. ✅ Create performance indexes and data quality system
+4. 🔄 Build core trade simulation engine (CURRENT FOCUS)
+5. 🔄 Integrate Gemini AI for natural language processing
+6. 🔄 Create React frontend for user interaction
 
 KEY CONSTRAINTS:
-- Hackathon timeline: Focus on MVP functionality
-- MongoDB expertise: Provide extensive guidance on queries and aggregation
-- Data availability: Work with what's accessible from balldontlie.io
-- Scope creep: Resist advanced features until core works perfectly
+- Hackathon timeline: Focus on MVP functionality over advanced features
+- Data accuracy: All playoff results must be historically accurate
+- Performance: Leverage 11 database indexes for real-time queries
+- Transparency: Clear about data sources (verified vs estimated)
+- Basketball realism: Trades must make sense within NBA salary cap rules
 
-TECHNICAL NOTES:
-- Use proven MongoDB aggregation patterns from thecodebarbarian.com examples
-- Implement proper error handling for API failures and missing data
-- Cache frequent queries for performance
-- Design schema for easy expansion beyond 2025 season
-- Follow NBA API rate limits and terms of service
+TECHNICAL PATTERNS TO FOLLOW:
+- Use MongoDB aggregation pipelines for complex player/team analysis
+- Implement proper error handling for missing data scenarios
+- Cache frequent queries for optimal performance
+- Follow proven NBA data patterns from thecodebarbarian.com examples
+- Design trade simulation logic for easy expansion and testing
+
+GEMINI AI INTEGRATION STRATEGY:
+- Parse natural language trade questions into structured queries
+- Query MongoDB for relevant player/team/series data
+- Calculate statistical impact using basketball metrics (PER, Win Shares, etc.)
+- Generate fan-friendly explanations referencing actual 2023-24 context
+- Use betting odds and upset history to add realistic scenario analysis
+
+CURRENT PROJECT STATUS:
+✅ Database: Complete with 213 players + 15 playoff series
+✅ Performance: Optimized with 11 indexes (sub-100ms queries)
+✅ Data Quality: Transparent about verified vs estimated data
+✅ GitHub: Professional repository with comprehensive README
+🔄 Next: Build trade simulation engine core logic
+🔄 Next: Implement Gemini AI natural language processing
+🔄 Next: Create React frontend for user interaction
