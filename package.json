@@ -1,0 +1,38 @@
+{
+  "name": "nba-trade-consigliere",
+  "version": "1.0.0",
+  "description": "NBA Playoff What If Simulator - Trade Analysis Tool",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "nodemon server/index.js",
+    "client": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "install-client": "cd client && npm install",
+    "install-server": "npm install",
+    "setup": "npm run install-server && npm run install-client"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.1.3",
+    "axios": "^0.27.2",
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "nba",
+    "analytics",
+    "simulation",
+    "trade",
+    "basketball"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
