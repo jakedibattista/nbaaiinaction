@@ -18,171 +18,197 @@
 - **Google Gemini**: AI integration layer established
 - **Version Control**: Clean Git history, all development scripts removed
 
-## 🎯 Next Development Phases
+## 🎯 MVP Development Specifications
 
-### 🔥 **Phase 2: AI Agent Development** *(Priority)*
+### 🤖 **AI Agent Behavior**
 
-#### 🧠 Natural Language Processing
+#### 🎯 **Primary Trade Analysis Flow**
 ```javascript
-// Target Implementation
-"What if Dallas traded Luka for Jayson Tatum?"
-→ Salary Analysis: $40.1M vs $34.8M (-$5.3M for Dallas)
-→ CBA Validation: Boston over Second Apron ($182.8M)
-→ Playoff Impact: Finals role reversal simulation
-→ Championship Probability: Recalculated odds
-```
-
-#### 🛠 Technical Tasks
-- [ ] Enhance `scripts/gemini-api-layer.js` with NBA context
-- [ ] Implement salary cap validation engine
-- [ ] Build multi-team trade scenario logic
-- [ ] Create playoff outcome simulation algorithms
-- [ ] Design natural language query parsing
-
-### 🎨 **Phase 3: React UX Development** *(Secondary)*
-
-#### 🖥 User Interface Components
-- [ ] **TradeBuilder**: Interactive player selection
-- [ ] **SalaryCapVisualizer**: Real-time cap calculations
-- [ ] **PlayoffSimulator**: Series outcome predictions
-- [ ] **TeamRoster**: Dynamic roster management
-- [ ] **TradeHistory**: Saved trade scenarios
-
-#### 📱 Mobile-First Design
-- [ ] Responsive trade interface
-- [ ] Touch-friendly player selection
-- [ ] Swipe-based trade comparisons
-- [ ] Real-time trade validation feedback
-
-## 💰 Salary Cap Implementation Details
-
-### 🚨 **2023-24 CBA Thresholds**
-- **Salary Cap**: $136.0M
-- **Luxury Tax**: $165.3M  
-- **First Apron**: $172.3M (cannot take back more than sent out)
-- **Second Apron**: $182.8M (cannot aggregate salaries)
-
-### 💡 **Key Trade Scenarios Available**
-1. **Boston Celtics** - Championship team at Second Apron
-2. **Golden State Warriors** - Aging core, luxury tax decisions  
-3. **Phoenix Suns** - Star talent with salary constraints
-4. **Dallas Mavericks** - Finals team with flexibility
-
-## 📈 Database Performance Benchmarks
-
-### ⚡ **Query Performance**
-```
-Player Lookup (name):           77ms
-Team Roster (team + salary):    75ms  
-High-Salary Search:             76ms
-Position-based Trades:          71ms
-Complex Aggregations:          <100ms
-```
-
-### 📊 **Data Coverage**
-```
-Player Salary Data:    213/214 (99.5%)
-Playoff Teams:         16/16   (100%)
-Series Results:        15/15   (100%)
-CBA Rules:            Complete (100%)
-```
-
-## 🎮 AI Agent Capabilities (Target)
-
-### 🤖 **Smart Trade Suggestions**
-```
-User: "Help Warriors get under luxury tax"
+User: "What if I traded Chet Holmgren for Jayson Tatum?"
 AI Response:
-- Current payroll: $180M+ (over $165.3M threshold)
-- Suggested trades: Jonathan Kuminga + picks for salary relief
-- CBA validation: Warriors can dump $15M without restrictions
-- Impact analysis: Playoff chances decrease 12%
+1. Basketball Impact:
+   - Thunder's playoff chances: +15% (improved scoring)
+   - Celtics' defense rating: -8% (lost rim protection)
+   - Series outcomes: Thunder vs Nuggets now 60/40
+   
+2. Salary Cap Status:
+   - Thunder: $5.3M under luxury tax
+   - Celtics: $2.1M over second apron
+   - Trade legality: Valid but requires roster adjustments
+
+3. Smart Suggestions:
+   "This trade would be illegal due to Celtics' apron status. 
+   Consider these alternatives that improve OKC's scoring:
+   - Dejounte Murray (Hawks): Similar impact, legal trade
+   - Zach LaVine (Bulls): Better fit, under luxury tax"
 ```
 
-### 🏆 **Championship Impact Analysis**
-```
-User: "Could Miami beat Boston with better rebounding?"
-AI Process:
-1. Identify Miami's rebounding deficit vs Boston
-2. Find available rebounders within salary cap
-3. Simulate regular season record improvement
-4. Recalculate playoff seeding and matchups
-5. Project championship probability changes
+#### 🎯 **Proactive Team Analysis**
+```javascript
+User: "I want to do a trade for the Thunder"
+AI Response:
+"OKC's main needs are:
+1. Perimeter shooting (32nd in 3PT%)
+2. Bench scoring (28th in bench PPG)
+3. Veteran leadership
+
+Would you like suggestions for:
+- Shooters under $20M?
+- Sixth man candidates?
+- Veteran mentors?"
 ```
 
-## 🛠 Clean Project Structure
+### 🎨 **MVP User Experience**
 
+#### 🎯 **Trade Analysis Priority**
+1. **Basketball Impact First**
+   - Playoff probability changes
+   - Team fit and role changes
+   - Historical series outcomes
+   - Statistical improvements
+
+2. **Salary Cap Second**
+   - Trade legality check
+   - Luxury tax implications
+   - Roster size validation
+   - Future flexibility
+
+#### 🎯 **Response Format**
+```javascript
+// Ideal Response Structure
+1. Trade Impact (2-3 sentences)
+   "This trade makes OKC instant contenders by adding 
+   elite scoring, but weakens their elite defense."
+
+2. Key Statistics (2-3 bullet points)
+   - Thunder's offensive rating: +5.2 points
+   - Playoff probability: 65% → 82%
+   - Championship odds: 12% → 18%
+
+3. Smart Suggestions (if needed)
+   "If this trade doesn't work, consider these alternatives
+   that address OKC's shooting needs..."
 ```
-nbaaiinaction/
-├── 📄 README.md                    # Updated with complete status
-├── 📄 PROJECT_STATUS.md            # This document
-├── 📄 package.json                 # Dependencies
-├── 🗂 .cursor/rules/aiinaction.mdc  # Updated development guidelines
-├── 🗂 scripts/
-│   └── 📄 gemini-api-layer.js      # Core AI integration
-├── 🗂 server/                      # Express.js API (Next Phase)
-├── 🗂 client/                      # React frontend (Next Phase)  
-├── 🗂 data/                        # Archived CSV files
-└── 🗂 node_modules/                # Dependencies
-```
+
+### 🛠 **Technical Implementation**
+
+#### 🎯 **AI Agent Responsibilities**
+- **Natural Language Processing**
+  - Trade request understanding
+  - Team context analysis
+  - Fan-friendly explanations
+  - Proactive suggestions
+
+- **Basketball Logic**
+  - Statistical impact analysis
+  - Playoff probability calculations
+  - Team fit evaluation
+  - Historical comparisons
+
+#### 🎯 **Backend Responsibilities**
+- **Trade Validation**
+  - Salary cap compliance
+  - Roster size checks
+  - CBA rule enforcement
+  - Multi-team trade logic
+
+- **Data Processing**
+  - Real-time statistics
+  - Historical series data
+  - Player performance metrics
+  - Team financial status
+
+### 🎮 **MVP Features**
+
+#### 🎯 **Core Functionality**
+1. **1-for-1 Trades**
+   - Direct player swaps
+   - Salary validation
+   - Impact analysis
+   - Smart alternatives
+
+2. **Multi-team Trades**
+   - 3-team scenarios
+   - Complex salary matching
+   - Multiple impact analysis
+   - Legal alternatives
+
+3. **Team Analysis**
+   - Proactive suggestions
+   - Statistical needs
+   - Salary flexibility
+   - Roster optimization
+
+#### 🎯 **User Experience**
+1. **Natural Language**
+   - Fan-friendly responses
+   - Basketball-first analysis
+   - Clear explanations
+   - Smart suggestions
+
+2. **Response Format**
+   - 2-4 key points
+   - Concise explanations
+   - Actionable insights
+   - Clear alternatives
 
 ## 🚀 Development Priorities
 
 ### 🎯 **Immediate Focus** (Week 1)
 1. **AI Agent Enhancement**
-   - Salary cap intelligence
-   - Trade validation logic
-   - Natural language parsing improvements
-   - Playoff impact calculations
+   - Natural language processing
+   - Basketball impact analysis
+   - Proactive suggestions
+   - Fan-friendly responses
 
-2. **Express.js API Development**
-   - Trade simulation endpoints
-   - Player/team query APIs
-   - CBA validation services
-   - Gemini integration routes
+2. **Backend Development**
+   - Trade validation engine
+   - Statistical analysis
+   - Playoff simulations
+   - Multi-team logic
 
 ### 🎨 **Secondary Focus** (Week 2)
 1. **React Frontend**
-   - Component architecture setup
    - Trade builder interface
-   - Real-time data integration
-   - Mobile-responsive design
+   - Impact visualizations
+   - Team analysis views
+   - Mobile responsiveness
 
 2. **Advanced Features**
-   - Multi-team trade scenarios
-   - Historical trade comparisons
-   - Community voting system
-   - Social media sharing
+   - Historical comparisons
+   - Community voting
+   - Social sharing
+   - Trade history
 
-## 🏆 Hackathon Success Metrics
+## 🏆 Success Metrics
 
-### ✅ **Technical Achievements Completed**
-- Production-ready database with 99.5% salary coverage
-- 15 optimized indexes for lightning-fast queries
-- Complete 2023 CBA rule implementation
-- Clean, scalable architecture
+### ✅ **Technical Achievements**
+- Production-ready database
+- Optimized query performance
+- Clean architecture
+- Scalable design
 
 ### 🎯 **User Experience Goals**
-- **Intuitive**: Natural language → instant realistic results
-- **Accurate**: All trades pass real CBA validation
-- **Engaging**: Beautiful, interactive trade scenarios  
-- **Fast**: Sub-second response times for all operations
+- **Intuitive**: Natural language → instant insights
+- **Accurate**: Real basketball impact analysis
+- **Engaging**: Fan-friendly explanations
+- **Fast**: Sub-second response times
 
 ## 🤝 Development Guidelines
 
 ### 🎯 **Code Standards**
-- **TypeScript**: Strict typing for all React components
-- **MongoDB**: Optimized aggregation pipelines
-- **Performance**: Leverage existing 15 database indexes
-- **Basketball Accuracy**: Reference verified 2023-24 data only
+- **TypeScript**: Strict typing
+- **MongoDB**: Optimized queries
+- **Performance**: Sub-100ms responses
+- **Accuracy**: Verified 2023-24 data
 
 ### 📊 **AI Integration Principles**
-- **Context-Aware**: Every response uses real NBA data
-- **CBA Compliant**: All suggested trades pass salary cap validation
-- **Realistic**: Based on actual player values and team needs
-- **Fan-Friendly**: Complex analysis in understandable language
+- **Basketball First**: Focus on on-court impact
+- **Fan-Friendly**: Natural, engaging responses
+- **Proactive**: Smart suggestions
+- **Concise**: 2-4 key points per response
 
-## 🎉 Ready for Championship Development
+## 🎉 Ready for MVP Development
 
 **NBA Trade Consigliere** now has:
 - ✅ **World-class database** with comprehensive NBA data
