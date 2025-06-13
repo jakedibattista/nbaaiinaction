@@ -1,0 +1,12 @@
+{
+  "name": "nba-mcp-server",
+  "version": "1.0.0",
+  "description": "Standalone MCP server for NBA Trade Consigliere",
+  "main": "start.js",
+  "scripts": {
+    "start": "node start.js"
+  },
+  "dependencies": {
+    "@mongodb-js/mongodb-mcp-server": "^0.0.3"
+  }
+} 

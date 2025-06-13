@@ -11,19 +11,29 @@ You are an expert AI programming assistant specializing in NBA analytics and AI-
 
 **NBA Trade Consigliere** is an AI-powered webapp that lets users create hypothetical NBA trades and simulate how they would have impacted the **2023-24 NBA playoffs**. Users explore "what if" scenarios through natural language queries powered by Google Gemini AI with full salary cap compliance.
 
-- **Hackathon**: [AI in Action](mdc:https:/ai-in-action.devpost.com)
+- **Hackathon**: @AI in Action
 - **Repository**: https://github.com/jakedibattista/nbaaiinaction
-- **Status**: 🎯 **Database Complete** → Building AI Agent & React UX
+- **Status**: 🎯 **AI Agent Backend Complete** → Building React UX
 
 ## 🚀 Technology Stack
 
-- **Backend**: Node.js + Express.js
+- **Backend**: **Dual-Server Architecture**
+    - **AI Chat Server**: Node.js + Express.js (`server/index.js`)
+    - **Data API Server**: Cursor's MongoDB Controller (MCP) on `localhost:8765`
 - **Database**: MongoDB Atlas (15 optimized indexes, 99.5% salary coverage)
 - **Frontend**: React.js + TypeScript *(Current Focus)*
-- **AI**: Google Gemini API with NBA context *(Current Focus)*
+- **AI**: Google Gemini 1.5 Flash (`gemini-1.5-flash-latest`)
 - **Data**: Complete 2023-24 season + CBA compliance
 
-## 🏆 Complete Database Implementation
+## 🏆 Core AI Architecture (`simplified-chat-handler.js`)
+
+The heart of the AI is a three-step process designed for fast, accurate, and context-aware responses:
+
+1.  **Classify Query**: Uses regex and keyword analysis to classify a user's natural language query into one of three categories: `Player`, `Team`, or `Trade`.
+2.  **Fetch Data**: Makes targeted HTTP requests to the **MCP Data API Server** to retrieve structured JSON data relevant to the query (e.g., player stats, team salaries).
+3.  **Generate Response**: Injects the fetched data into a dynamically generated, context-rich "system prompt" and sends it to the **Gemini 1.5 Flash** model to generate a comprehensive, expert-level analysis.
+
+This architecture ensures that the AI's response is grounded in real, accurate data from our database.
 
 ### ✅ **Players Collection** (213/214 players with salary data)
 ```javascript
@@ -70,13 +80,13 @@ You are an expert AI programming assistant specializing in NBA analytics and AI-
 
 ## 🎯 Current Development Focus
 
-### 🔥 **Phase 2: AI Agent Development** *(PRIORITY)*
-- **Enhanced Gemini Integration**: Context-aware NBA trade analysis
-- **Natural Language Processing**: "Trade X for Y" → Full analysis
-- **Salary Cap Intelligence**: Real-time CBA compliance checking
-- **Multi-team Trade Logic**: Complex 3+ team scenarios
+### 🔥 **Phase 2: AI Agent Development** *(COMPLETE)*
+- **Natural Language Classifier**: `classifyQuery()` accurately routes user intent.
+- **MCP Data Integration**: `fetchData()` methods retrieve real-time stats.
+- **Dynamic Prompt Engineering**: `createSystemPrompt()` grounds AI in facts.
+- **Gemini 1.5 Integration**: Uses the latest `gemini-1.5-flash-latest` model.
 
-### 🎨 **Phase 3: React UX** *(SECONDARY)*
+### 🎨 **Phase 3: React UX** *(PRIORITY)*
 - **Modern React Components**: TypeScript + hooks
 - **Interactive Trade Builder**: Drag-and-drop interface
 - **Real-time Visualizations**: Salary cap charts, team rosters
@@ -87,38 +97,36 @@ You are an expert AI programming assistant specializing in NBA analytics and AI-
 ### 🧠 **Natural Language Understanding**
 ```
 Input: "What if Dallas traded Luka for Jayson Tatum?"
-Output: 
-- Salary Analysis: Luka ($40.1M) vs Tatum ($34.8M)
-- Cap Impact: Dallas saves $5.3M, Boston over Second Apron
-- Trade Validation: CBA compliant? Yes/No + reasons
-- Playoff Simulation: How Finals change with role reversal
+AI Process:
+1. `classifyQuery` identifies this as a 'trade' query.
+2. `fetchTradeData` calls MCP API `/api/trade/analyze` with ["Luka Dončić", "Jayson Tatum"].
+3. `createTradePrompt` builds a prompt with the returned salary/CBA analysis.
+4. Gemini generates a response analyzing the trade's impact.
 ```
 
 ### 📊 **Complex Trade Intelligence**
 ```
 Input: "Show me trades to get Warriors under luxury tax"
 AI Process:
-1. Query Warriors current payroll ($180M+)
-2. Identify luxury tax threshold ($165.3M)
-3. Find $15M+ in salary to dump
-4. Suggest realistic trade partners
-5. Validate all trades for CBA compliance
+1. `classifyQuery` identifies this as a 'team' query.
+2. `fetchTeamData` calls MCP API `/api/team/Golden%20State%20Warriors/salary`.
+3. `createTeamPrompt` injects payroll data into a prompt for Gemini.
+4. Gemini analyzes the data and suggests trade scenarios.
 ```
 
 ### 🏆 **Championship Impact Analysis**
 ```
 Input: "Could Miami have beaten Boston with better rebounding?"
 AI Process:
-1. Analyze Miami's rebounding weaknesses vs Boston
-2. Find available rebounders within salary constraints
-3. Simulate regular season impact
-4. Project playoff seeding changes
-5. Recalculate championship probability
+1. `classifyQuery` identifies this as a 'team' query.
+2. `fetchTeamData` gets Miami's roster from MCP.
+3. `createTeamPrompt` notes roster weaknesses (e.g., rebounding stats).
+4. Gemini suggests available rebounders that fit salary constraints and analyzes impact.
 ```
 
 ## ⚡ Database Performance
 
-**15 Optimized Indexes (Sub-100ms queries):**
+**15 Optimized Indexes (Sub-100ms queries via MCP):**
 - `name_1` - Player lookups (77ms avg)
 - `salary_2023_2024_-1` - High-salary queries (76ms)
 - `team_1_salary_2023_2024_-1` - Roster analysis (75ms)
@@ -141,11 +149,10 @@ AI Process:
 ## 🛠 Technical Guidelines
 
 ### 🎯 **AI Agent Development**
-- Use MongoDB aggregation for complex salary analysis
-- Leverage Gemini API for natural language understanding
-- Implement CBA rule validation for all trades
-- Cache common queries for performance
-- Design for real-time user interactions
+- Use **Cursor's MongoDB Controller (MCP)** for all database interactions.
+- All AI logic is centralized in `server/simplified-chat-handler.js`.
+- Add new query types or improve data fetching within the handler.
+- Enhance dynamic system prompts in `createSystemPrompt` for better AI responses.
 
 ### 🎨 **React UX Development**
 - Modern TypeScript components with proper types
@@ -164,29 +171,46 @@ AI Process:
 
 ```
 nbaaiinaction/
-├── scripts/
-│   └── gemini-api-layer.js         # AI integration core
-├── server/                         # Express.js API (Next)
-│   ├── routes/                     # Trade endpoints
-│   ├── utils/                      # CBA validation
-│   └── models/                     # MongoDB schemas
-├── client/                         # React frontend (Next)
-│   ├── components/                 # UI components
-│   ├── hooks/                      # Custom React hooks
-│   └── services/                   # API integration
-└── data/                           # Archived CSV files
+├── server/
+│   ├── index.js                      # Express.js API Server
+│   └── simplified-chat-handler.js    # CORE AI LOGIC: Classifier, Data Fetcher, Prompt Engineer
+├── client/                           # React frontend (Next)
+│   ├── components/                   # UI components
+│   ├── hooks/                        # Custom React hooks
+│   └── services/                     # API integration
+└── data/                             # Archived CSV files
 ```
+
+*Note: The **MCP Data Server** runs separately within Cursor and exposes the database via a REST API on `localhost:8765`. It is not part of this repository's file structure.*
 
 ## 🎮 Example Development Tasks
 
 ### 🤖 **AI Agent Tasks**
 ```javascript
-// Enhance gemini-api-layer.js
-const analyzeTradeImpact = async (tradeQuery) => {
-  // 1. Parse natural language trade request
-  // 2. Validate salary cap compliance
-  // 3. Calculate playoff impact
-  // 4. Generate comprehensive response
+// Enhance simplified-chat-handler.js to recognize a new query type
+
+// 1. Add a new classification condition
+classifyQuery(query) {
+  if (query.includes('who is the best')) {
+    return 'comparison';
+  }
+  // ... other classifications
+}
+
+// 2. Add a new data fetching method
+async fetchData(query, queryType) {
+  if (queryType === 'comparison') {
+    return await this.fetchComparisonData(query);
+  }
+  // ... other fetchers
+}
+
+// 3. Add a new prompt creation method
+createSystemPrompt(queryType, data) {
+    if (queryType === 'comparison') {
+        return this.createComparisonPrompt(data);
+    }
+    // ... other prompts
 }
 ```
 
@@ -203,9 +227,10 @@ interface TradeBuilderProps {
 ## 🏆 Success Metrics
 
 ### ✅ **Technical Achievements**
-- **Database**: 99.5% salary coverage, 15 indexes, sub-100ms queries
-- **CBA**: Complete 2023 rule implementation
-- **Performance**: Production-ready, optimized architecture
+- **Dual-Server Backend**: Decoupled chat logic from data access.
+- **Data-Grounded AI**: Gemini responses are built on real-time database facts.
+- **CBA**: Complete 2023 rule implementation (via MCP analysis).
+- **Performance**: Production-ready, optimized architecture.
 
 ### 🎯 **User Experience Goals**
 - **Intuitive**: Natural language → instant realistic results
@@ -220,7 +245,5 @@ interface TradeBuilderProps {
 2. **Basketball Accuracy**: Every simulation grounded in real 2023-24 data
 3. **User Delight**: Beautiful, intuitive interface that makes trading fun
 4. **Technical Excellence**: Production-ready code that performs flawlessly
-
-
 
 Always prioritize **user experience**, **basketball accuracy**, and **AI sophistication** in your development assistance.

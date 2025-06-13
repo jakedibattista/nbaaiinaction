@@ -1,0 +1,42 @@
+services:
+  # AI Agent API Server
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: nba-agent-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      - MCP_SERVER_URL=http://mcp:8765
+    depends_on:
+      - mcp
+    networks:
+      - nba-net
+
+  # MongoDB MCP Data Server
+  mcp:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    container_name: nba-mcp-server
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    env_file:
+      - .env
+    environment:
+      - MDB_MCP_CONNECTION_STRING=${MONGODB_URI}
+      - MDB_MCP_DEFAULT_DATABASE=nba-trade-consigliere
+      - PORT=8765
+      - HOST=0.0.0.0
+      - NPM_CONFIG_CACHE=/usr/src/app/.npm
+    networks:
+      - nba-net
+
+networks:
+  nba-net:
+    driver: bridge 

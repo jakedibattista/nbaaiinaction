@@ -1,512 +1,190 @@
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const axios = require('axios');
+// Polyfill for fetch and related APIs in older Node.js versions
+if (!globalThis.fetch) {
+  const fetch = require('node-fetch');
+  globalThis.fetch = fetch;
+  globalThis.Headers = fetch.Headers;
+  globalThis.Request = fetch.Request;
+  globalThis.Response = fetch.Response;
+}
 
-// Load environment variables
-dotenv.config();
+/**
+ * NBA Trade Consigliere - Streamlined Server
+ * Optimized for 3 main scenarios:
+ * 1. Player Analysis: "Josh Giddey" → stats + similar salary players
+ * 2. Team Analysis: "Lakers" → salary info + weaknesses  
+ * 3. Trade Analysis: "LeBron for Luka" → CBA check + impact
+ */
+
+require('dotenv').config();
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const SimplifiedNBAChatHandler = require('./simplified-chat-handler');
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
 
-// MongoDB Connection
+// Global chat handler instance
+let chatHandler = null;
+
+// MongoDB connection
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/nba_trade_consigliere');
-    console.log(`📊 MongoDB Connected: ${conn.connection.host}`);
+    // Ensure the MONGODB_URI is loaded
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is not defined in the .env file.');
+    }
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('✅ Connected to MongoDB Atlas - NBA Trade Consigliere Database');
+    
+    // Initialize simplified chat handler after DB connection
+    chatHandler = new SimplifiedNBAChatHandler(
+      mongoose.connection.db,
+      process.env.GEMINI_API_KEY
+    );
+    console.log('✅ Simplified NBA Chat Handler initialized');
+    
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('❌ MongoDB connection failed:', error.message);
     process.exit(1);
   }
 };
-
-// Initialize database connection
-connectDB();
-
-// MongoDB Schemas (based on our playground schema)
-const playerSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  team: { type: String, required: true },
-  position: { type: String, required: true },
-  jersey_number: Number,
-  age: Number,
-  height: String,
-  weight: Number,
-  salary: Number,
-  contract_years: Number,
-  stats_2025: {
-    regular_season: {
-      games: Number,
-      games_started: Number,
-      minutes: Number,
-      pts: Number,
-      reb: Number,
-      ast: Number,
-      stl: Number,
-      blk: Number,
-      fg_pct: Number,
-      fg3_pct: Number,
-      ft_pct: Number,
-      tov: Number,
-      pf: Number,
-      plus_minus: Number,
-      usage_rate: Number,
-      true_shooting: Number,
-      effective_fg: Number,
-      per: Number,
-      win_shares: Number,
-      box_plus_minus: Number,
-      value_over_replacement: Number
-    },
-    playoffs: {
-      games: Number,
-      games_started: Number,
-      minutes: Number,
-      pts: Number,
-      reb: Number,
-      ast: Number,
-      stl: Number,
-      blk: Number,
-      fg_pct: Number,
-      fg3_pct: Number,
-      ft_pct: Number,
-      tov: Number,
-      pf: Number,
-      plus_minus: Number,
-      usage_rate: Number,
-      true_shooting: Number,
-      effective_fg: Number,
-      per: Number,
-      win_shares: Number,
-      box_plus_minus: Number,
-      value_over_replacement: Number
-    }
-  },
-  active: { type: Boolean, default: true },
-  all_star: { type: Boolean, default: false },
-  awards: [String],
-  injuries: [{
-    type: String,
-    games_missed: Number,
-    return_date: Date
-  }]
-}, { timestamps: true });
-
-const teamSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  abbreviation: { type: String, required: true, unique: true },
-  city: String,
-  conference: { type: String, enum: ['Eastern', 'Western'] },
-  division: String,
-  arena: String,
-  coach: String,
-  stats_2025: {
-    regular_season: {
-      wins: Number,
-      losses: Number,
-      win_pct: Number,
-      conf_rank: Number,
-      playoff_seed: Number,
-      pts_per_game: Number,
-      opp_pts_per_game: Number,
-      offensive_rating: Number,
-      defensive_rating: Number,
-      net_rating: Number,
-      pace: Number,
-      strength_of_schedule: Number,
-      remaining_strength_of_schedule: Number,
-      schedule_adjusted_rating: Number,
-      consistency_rating: Number,
-      adjusted_four_factors: Number,
-      achievement_level: Number,
-      current_streak: String,
-      home_record: {
-        wins: Number,
-        losses: Number
-      },
-      away_record: {
-        wins: Number,
-        losses: Number
-      },
-      division_record: {
-        wins: Number,
-        losses: Number
-      },
-      conference_record: {
-        wins: Number,
-        losses: Number
-      }
-    },
-    playoffs: {
-      series_wins: Number,
-      series_losses: Number,
-      games_won: Number,
-      games_lost: Number,
-      rounds_reached: String,
-      championship: Boolean,
-      pts_per_game: Number,
-      opp_pts_per_game: Number,
-      offensive_rating: Number,
-      defensive_rating: Number,
-      net_rating: Number,
-      home_record: {
-        wins: Number,
-        losses: Number
-      },
-      away_record: {
-        wins: Number,
-        losses: Number
-      }
-    }
-  },
-  roster_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Player' }],
-  team_stats: {
-    total_salary: Number,
-    luxury_tax: Number,
-    cap_space: Number,
-    draft_picks: [{
-      year: Number,
-      round: Number,
-      pick: Number,
-      protected: Boolean
-    }]
-  }
-}, { timestamps: true });
-
-const userQuerySchema = new mongoose.Schema({
-  user_query: { type: String, required: true },
-  processed_query: {
-    trade_type: String,
-    teams: [String],
-    players_out: [String],
-    players_in: [String],
-    context: String
-  },
-  gemini_response: String,
-  related_trade_scenario: { type: mongoose.Schema.Types.ObjectId, ref: 'TradeScenario' },
-  data_sources: [String],
-  response_confidence: Number,
-  processing_time_ms: Number,
-  user_satisfaction: {
-    rating: Number,
-    feedback: String
-  }
-}, { timestamps: true });
-
-// MongoDB Models
-const Player = mongoose.model('Player', playerSchema);
-const Team = mongoose.model('Team', teamSchema);
-const UserQuery = mongoose.model('UserQuery', userQuerySchema);
-
-// Basic route
-app.get('/', (req, res) => {
-  res.json({ 
-    message: 'NBA Trade Consigliere API is running!',
-    version: '1.0.0',
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-    endpoints: {
-      query: 'POST /api/query',
-      players: 'GET /api/players',
-      teams: 'GET /api/teams',
-      import: 'POST /api/import/players',
-      'import-teams': 'POST /api/import/teams'
-    }
-  });
-});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+    chatHandler: chatHandler ? 'Ready' : 'Not Ready'
   });
 });
 
-// Import players from balldontlie.io
-app.post('/api/import/players', async (req, res) => {
-  try {
-    console.log('🏀 Starting player data import from balldontlie.io...');
-    
-    // Get all players from balldontlie.io
-    const playersResponse = await axios.get('https://www.balldontlie.io/api/v1/players', {
-      params: {
-        per_page: 100 // Adjust based on API limits
-      }
-    });
-
-    const playersData = playersResponse.data.data;
-    console.log(`📥 Fetched ${playersData.length} players from API`);
-
-    let importedCount = 0;
-    let skippedCount = 0;
-
-    for (const playerData of playersData) {
-      try {
-        // Check if player already exists
-        const existingPlayer = await Player.findOne({ 
-          name: `${playerData.first_name} ${playerData.last_name}` 
-        });
-
-        if (existingPlayer) {
-          skippedCount++;
-          continue;
-        }
-
-        // Create new player with basic info (stats will be populated later)
-        const newPlayer = new Player({
-          name: `${playerData.first_name} ${playerData.last_name}`,
-          team: playerData.team.abbreviation,
-          position: playerData.position || 'G', // Default to Guard if no position
-          height: `${playerData.height_feet}-${playerData.height_inches}`,
-          weight: playerData.weight_pounds,
-          active: true,
-          stats_2025: {
-            regular_season: {
-              games: 0, minutes: 0, pts: 0, reb: 0, ast: 0,
-              stl: 0, blk: 0, fg_pct: 0, fg3_pct: 0, ft_pct: 0,
-              tov: 0, pf: 0, plus_minus: 0
-            },
-            playoffs: {
-              games: 0, minutes: 0, pts: 0, reb: 0, ast: 0,
-              stl: 0, blk: 0, fg_pct: 0, fg3_pct: 0, ft_pct: 0,
-              tov: 0, pf: 0, plus_minus: 0
-            }
-          }
-        });
-
-        await newPlayer.save();
-        importedCount++;
-
-        if (importedCount % 50 === 0) {
-          console.log(`✅ Imported ${importedCount} players so far...`);
-        }
-
-      } catch (playerError) {
-        console.error(`Error importing player ${playerData.first_name} ${playerData.last_name}:`, playerError.message);
-      }
-    }
-
-    console.log(`🎉 Import complete! ${importedCount} new players imported, ${skippedCount} skipped (already exist)`);
-    
-    res.json({
-      success: true,
-      imported: importedCount,
-      skipped: skippedCount,
-      total: playersData.length,
-      message: 'Player import completed successfully'
-    });
-
-  } catch (error) {
-    console.error('Player import error:', error);
-    res.status(500).json({ 
-      error: 'Failed to import players',
-      details: error.message 
-    });
-  }
-});
-
-// Import teams from balldontlie.io
-app.post('/api/import/teams', async (req, res) => {
-  try {
-    console.log('🏀 Starting team data import from balldontlie.io...');
-    
-    const teamsResponse = await axios.get('https://www.balldontlie.io/api/v1/teams');
-    const teamsData = teamsResponse.data.data;
-    
-    console.log(`📥 Fetched ${teamsData.length} teams from API`);
-
-    let importedCount = 0;
-    let skippedCount = 0;
-
-    for (const teamData of teamsData) {
-      try {
-        const existingTeam = await Team.findOne({ abbreviation: teamData.abbreviation });
-
-        if (existingTeam) {
-          skippedCount++;
-          continue;
-        }
-
-        const newTeam = new Team({
-          name: teamData.full_name,
-          abbreviation: teamData.abbreviation,
-          city: teamData.city,
-          conference: teamData.conference,
-          division: teamData.division,
-          stats_2025: {
-            regular_season: {
-              wins: 0, losses: 0, win_pct: 0, conf_rank: 0, playoff_seed: 0,
-              pts_per_game: 0, opp_pts_per_game: 0, offensive_rating: 0,
-              defensive_rating: 0, net_rating: 0, pace: 0
-            },
-            playoffs: {
-              series_wins: 0, series_losses: 0, games_won: 0, games_lost: 0,
-              rounds_reached: '', championship: false, pts_per_game: 0,
-              opp_pts_per_game: 0, offensive_rating: 0, defensive_rating: 0, net_rating: 0
-            }
-          },
-          roster_ids: []
-        });
-
-        await newTeam.save();
-        importedCount++;
-
-      } catch (teamError) {
-        console.error(`Error importing team ${teamData.full_name}:`, teamError.message);
-      }
-    }
-
-    console.log(`🎉 Team import complete! ${importedCount} new teams imported, ${skippedCount} skipped`);
-    
-    res.json({
-      success: true,
-      imported: importedCount,
-      skipped: skippedCount,
-      total: teamsData.length,
-      message: 'Team import completed successfully'
-    });
-
-  } catch (error) {
-    console.error('Team import error:', error);
-    res.status(500).json({ 
-      error: 'Failed to import teams',
-      details: error.message 
-    });
-  }
-});
-
-// Placeholder for Gemini AI query endpoint
-app.post('/api/query', async (req, res) => {
+// Simplified chat endpoint - handles all 3 main scenarios
+app.post('/api/chat', async (req, res) => {
+  const startTime = Date.now();
+  
   try {
     const { query } = req.body;
+    console.log(`\n[${new Date().toISOString()}] 🚀 Received query: "${query}"`);
     
     if (!query) {
       return res.status(400).json({ error: 'Query is required' });
     }
 
-    // Save user query to database
-    const userQuery = new UserQuery({
-      user_query: query,
-      processed_query: {
-        trade_type: 'unknown',
-        teams: [],
-        players_out: [],
-        players_in: [],
-        context: '2025_season'
-      },
-      gemini_response: `This is a placeholder response for: "${query}". Coming soon: Real Gemini AI analysis with MongoDB data!`,
-      data_sources: ['placeholder'],
-      response_confidence: 0.5,
-      processing_time_ms: 500
-    });
-
-    await userQuery.save();
-    
-    res.json({
-      query,
-      response: userQuery.gemini_response,
-      timestamp: new Date().toISOString(),
-      source: 'placeholder',
-      query_id: userQuery._id
-    });
-  } catch (error) {
-    console.error('Query error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Get players with optional filtering
-app.get('/api/players', async (req, res) => {
-  try {
-    const { team, position, search, limit = 50 } = req.query;
-    
-    let query = { active: true };
-    
-    if (team) query.team = team.toUpperCase();
-    if (position) query.position = position.toUpperCase();
-    if (search) {
-      query.name = { $regex: search, $options: 'i' };
+    if (!chatHandler) {
+      return res.status(503).json({ 
+        error: 'Chat service is initializing, please try again in a moment'
+      });
     }
 
-    const players = await Player.find(query)
-      .limit(parseInt(limit))
-      .sort({ name: 1 });
+    // Process the chat using our simplified handler
+    const result = await chatHandler.processChat(query);
+    console.log(`[${new Date().toISOString()}] ✨ Chat handler processed. Success: ${result.success}`);
+
+    if (result.success && result.data) {
+      console.log(`[${new Date().toISOString()}] 🧐 Deep dive into returned data:`, JSON.stringify(result.data, null, 2));
+    }
     
-    res.json({ 
-      players, 
-      count: players.length,
-      filters: { team, position, search }
-    });
+    const responseTime = Date.now() - startTime;
+    
+    if (result.success) {
+      res.json({
+        response: result.response,
+        queryType: result.queryType,
+        data: result.data,
+        responseTime: `${responseTime}ms`,
+        source: 'gemini-1.5-pro-latest'
+      });
+    } else {
+      console.error(`[${new Date().toISOString()}] ❌ Error from chat handler:`, result.error);
+      res.status(500).json({
+        error: result.error,
+        response: result.response,
+        responseTime: `${responseTime}ms`
+      });
+    }
+
   } catch (error) {
-    console.error('Players error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error(`[${new Date().toISOString()}] 💥 FATAL ERROR in /api/chat:`, error);
+    res.status(500).json({ 
+      error: 'Failed to process chat',
+      details: error.message 
+    });
   }
 });
 
-// Get teams with optional filtering
+// Simple database query endpoints (can be removed if not used by a frontend)
 app.get('/api/teams', async (req, res) => {
   try {
-    const { conference } = req.query;
-    
-    let query = {};
-    if (conference) query.conference = conference;
-
-    const teams = await Team.find(query)
-      .populate('roster_ids', 'name position')
-      .sort({ name: 1 });
-    
-    res.json({ 
-      teams, 
-      count: teams.length,
-      filters: { conference }
-    });
+    const teams = await mongoose.connection.db.collection('players')
+      .distinct('team', { active: true });
+    res.json({ teams: teams.filter(t => t).sort() });
   } catch (error) {
-    console.error('Teams error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Failed to fetch teams' });
   }
 });
 
-// Get database stats
-app.get('/api/stats', async (req, res) => {
+app.get('/api/players/:team?', async (req, res) => {
   try {
-    const playerCount = await Player.countDocuments({ active: true });
-    const teamCount = await Team.countDocuments();
-    const queryCount = await UserQuery.countDocuments();
+    const team = req.params.team || req.query.team;
+    const query = team ? { team: team, active: true } : { active: true };
     
-    res.json({
-      database: {
-        players: playerCount,
-        teams: teamCount,
-        queries: queryCount
-      },
-      status: 'Connected',
-      timestamp: new Date().toISOString()
-    });
+    const players = await mongoose.connection.db.collection('players')
+      .find(query)
+      .project({ 
+        name: 1, 
+        team: 1, 
+        position: 1, 
+        salary_2023_2024: 1, 
+        stats_2023_2024: 1 
+      })
+      .sort({ salary_2023_2024: -1 })
+      .limit(50)
+      .toArray();
+    
+    res.json({ players });
   } catch (error) {
-    console.error('Stats error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Failed to fetch players' });
   }
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
-});
+// Connect to database and start server
+async function startServer() {
+  try {
+    await connectDB();
+    
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 NBA Trade Consigliere API running on port ${PORT}`);
+      console.log(`🤖 Powered by Gemini 1.5 Pro`);
+      console.log(`📊 Database: 2023-24 NBA Season (Complete)`);
+      console.log(`🎯 Optimized for 3 scenarios: Player, Team, & Trade Analysis`);
+    });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Endpoint not found' });
-});
+    const gracefulShutdown = (signal) => {
+      console.log(`\n[${new Date().toISOString()}] Received ${signal}. Shutting down gracefully...`);
+      server.close(() => {
+        console.log(`[${new Date().toISOString()}] ✅ HTTP server closed.`);
+        mongoose.connection.close(false, () => {
+          console.log(`[${new Date().toISOString()}] ✅ MongoDB connection closed.`);
+          process.exit(0);
+        });
+      });
+    };
 
-app.listen(PORT, () => {
-  console.log(`🏀 NBA Trade Consigliere server running on port ${PORT}`);
-  console.log(`📊 API documentation available at http://localhost:${PORT}`);
-  console.log(`🔗 MongoDB connection: ${process.env.MONGODB_URI ? 'Remote' : 'Local'}`);
-}); 
+    // Listen for termination signals
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer(); 

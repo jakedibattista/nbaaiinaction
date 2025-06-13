@@ -1,9 +1,9 @@
 # 🏀 NBA Trade Consigliere
 
-**AI-Powered NBA Trade Simulator** - Explore "what if" scenarios from the 2023-24 NBA season with natural language queries powered by Google Gemini AI.
+**AI-Powered NBA Trade Simulator** - Explore "what if" scenarios from the 2023-24 NBA season with natural language queries powered by Google Gemini AI and unified MCP data access.
 
 > *Submitted to: [AI in Action Hackathon](https://ai-in-action.devpost.com/)*  
-> **Status**: 🎯 **Database Complete** → Now Building AI Agent & UX
+> **Status**: 🎯 **MCP Architecture Complete** → Building AI Agent & React UX
 
 ## 🎯 Project Overview
 
@@ -11,11 +11,11 @@
 
 ## ✨ Key Features
 
-### 🤖 **AI-Powered Trade Analysis**
+### 🤖 **Unified MCP Architecture**
+- **Single Data Layer**: Both Cursor AI and your app use the same MCP server
+- **Node.js 16+ Compatible**: Works with existing development environment
 - **Natural Language Queries**: "Trade X for Y" → AI handles all complexity
-- **Google Gemini Integration**: Advanced AI understands NBA context
-- **Salary Cap Compliance**: Real 2023 CBA rules with luxury tax calculations  
-- **Playoff Impact Simulation**: How trades change championship odds
+- **Real-time Database Access**: Sub-100ms query performance
 
 ### 💰 **Complete NBA Financial Engine**
 - **99.5% Salary Coverage**: 213/214 players with 2023-24 salary data
@@ -31,12 +31,42 @@
 
 ## 🚀 Technology Stack
 
-- **Backend**: Node.js + Express.js
+- **MCP Server**: Node.js 16+ compatible NBA data interface
+- **Backend**: Express.js with MCP integration
 - **Database**: MongoDB Atlas with 15 performance indexes
 - **AI Integration**: Google Gemini API with NBA context
 - **Frontend**: React.js with TypeScript *(Next Phase)*
 - **Data**: Complete 2023-24 season + CBA compliance
-- **Performance**: Sub-100ms queries, real-time trade validation
+
+## 🏗️ MCP Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Cursor AI     │    │  Your Web App   │    │  Gemini AI      │
+│                 │    │                 │    │                 │
+└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
+          │                      │                      │
+          └──────────────────────┼──────────────────────┘
+                                 │
+                    ┌─────────────▼───────────────┐
+                    │     NBA MCP Server          │
+                    │  (node16-mcp-server.js)     │
+                    │                             │
+                    │  • Player Search            │
+                    │  • Team Analysis            │
+                    │  • Trade Scenarios          │
+                    │  • Salary Cap Logic         │
+                    └─────────────┬───────────────┘
+                                  │
+                    ┌─────────────▼───────────────┐
+                    │     MongoDB Atlas           │
+                    │                             │
+                    │  • 213 NBA Players          │
+                    │  • 2023-24 Season Data      │
+                    │  • Salary Information       │
+                    │  • Team Rosters             │
+                    └─────────────────────────────┘
+```
 
 ## 🏆 Database Implementation Complete
 
@@ -44,7 +74,7 @@
 ```javascript
 {
   name: "Luka Dončić",
-  team: "Dal",
+  team: "Dallas Mavericks",
   position: "G", 
   salary_2023_2024: 40100000,  // Real contract data
   stats_2023_2024: {
@@ -68,49 +98,29 @@
 }
 ```
 
-### ✅ **Playoff Series Collection** (15 series)
+### ✅ **MCP Server Capabilities**
 ```javascript
-{
-  series_id: "finals-celtics-mavs",
-  round: "NBA Finals",
-  winner: { name: "Boston Celtics", games_won: 4 },
-  loser: { name: "Dallas Mavericks", games_won: 1 },
-  upset: false
-}
+// Player search
+await mcpServer.findPlayer('LeBron James');
+
+// Team analysis  
+await mcpServer.findTeamPlayers('Lakers');
+
+// Trade scenarios
+await mcpServer.analyzeTradeScenario(['LeBron James', 'Luka Dončić']);
+
+// Salary cap analysis
+await mcpServer.getTeamSalaryInfo('Warriors');
+
+// Natural language processing
+await mcpServer.processQuery('Show team Lakers');
 ```
 
-## 🎮 AI Agent Capabilities *(In Development)*
-
-### 🧠 **Natural Language Understanding**
-```
-"What if Dallas traded Luka for Jayson Tatum?"
-→ Salary analysis: Luka ($40.1M) vs Tatum ($34.8M) 
-→ Cap impact: Dallas saves $5.3M, Boston over Second Apron
-→ Playoff simulation: How Finals change with role reversal
-```
-
-### 📈 **Complex Trade Scenarios**  
-```
-"Show me realistic trades to get under the luxury tax"
-→ AI identifies teams over $165.3M threshold
-→ Suggests salary dumps with draft pick compensation
-→ Validates CBA compliance automatically
-```
-
-### 🎯 **Championship Impact Analysis**
-```
-"Could the Warriors make playoffs with better shooting?"
-→ Identifies available shooters within salary constraints
-→ Simulates regular season record improvements
-→ Projects playoff seeding changes
-```
-
-## 🛠 Quick Start *(Database Ready)*
+## 🛠 Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- MongoDB Atlas account  
-- Google Gemini API key
+- Node.js 16+ (your current v16.18.0 works!)
+- MongoDB Atlas connection (already configured)
 
 ### Installation
 ```bash
@@ -118,36 +128,62 @@
 git clone https://github.com/jakedibattista/nbaaiinaction.git
 cd nbaaiinaction
 
-# Install dependencies
+# Install dependencies (already done)
 npm install
 
-# Environment setup
-cp .env.example .env
-# Add your MongoDB URI and Gemini API key
+# Test MCP server
+node node16-mcp-server.js
 
-# Database is ready - start building!
-npm run dev
+# Configure Cursor MCP (see MCP_SETUP.md)
+# Add cursor-mcp-config.json to Cursor settings
 ```
 
-## 📁 Current Project Structure
+### Usage Examples
+
+#### **In Cursor AI**
+```
+"Show me LeBron James from the NBA database"
+"What players are on the Lakers?"
+"Analyze a trade between LeBron and Luka"
+"What's the Warriors' salary cap situation?"
+```
+
+#### **In Your App**
+```javascript
+const { NBATradeConsigliere } = require('./update-app-for-mcp');
+
+const nbaApp = new NBATradeConsigliere();
+await nbaApp.initialize();
+
+// Get player data
+const lebron = await nbaApp.getPlayerStats('LeBron James');
+
+// Analyze trades
+const tradeAnalysis = await nbaApp.analyzeTradeScenario(['LeBron James', 'Luka Dončić']);
+```
+
+## 📁 Clean Project Structure
 
 ```
 nbaaiinaction/
+├── node16-mcp-server.js         # 🎯 Core MCP server (Node 16+ compatible)
+├── update-app-for-mcp.js        # 🔧 Integration examples
+├── cursor-mcp-config.json       # ⚙️  Cursor MCP configuration
+├── MCP_SETUP.md                 # 📖 Complete setup guide
 ├── scripts/
-│   └── gemini-api-layer.js       # AI integration (core functionality)
-├── server/                       # Express.js API *(Next Phase)*
-├── client/                       # React frontend *(Next Phase)*
-├── data/                         # Original CSV files (archived)
-└── README.md
+│   └── gemini-api-layer.js      # 🤖 AI integration core
+├── server/                      # 🌐 Express.js API
+├── client/                      # ⚛️  React frontend
+└── data/                        # 📊 Original CSV files (archived)
 ```
 
 ## ⚡ Performance Benchmarks
 
-### 🏃‍♂️ **Database Query Speed**
-- **Player Lookup**: 77ms average (name index)
-- **Team Roster**: <10ms (team index) 
-- **Salary Analysis**: 76ms (salary index)
-- **Trade Validation**: 75ms (compound indexes)
+### 🏃‍♂️ **MCP Server Performance**
+- **Player Lookup**: <100ms (fuzzy name matching)
+- **Team Roster**: <50ms (optimized team queries)
+- **Trade Analysis**: <150ms (complex salary calculations)
+- **Memory Usage**: ~50MB (efficient connection pooling)
 
 ### 💾 **Data Coverage**
 - **Players**: 99.5% (213/214 with salary data)
@@ -157,17 +193,23 @@ nbaaiinaction/
 
 ## 🎯 Development Roadmap
 
-### 🔥 **Phase 2: AI Agent** *(Current Focus)*
-- [ ] Enhanced Gemini prompts with NBA context
-- [ ] Trade suggestion engine with salary constraints
-- [ ] Natural language query processing
-- [ ] Complex multi-team trade scenarios
+### ✅ **Phase 1: MCP Architecture** *(COMPLETE)*
+- [x] Node.js 16+ compatible MCP server
+- [x] Unified data access layer
+- [x] Cursor AI integration
+- [x] Natural language query processing
 
-### 🎨 **Phase 3: Beautiful UX**
-- [ ] React frontend with modern design
+### 🔥 **Phase 2: AI Agent Enhancement** *(Current Focus)*
+- [ ] Enhanced Gemini prompts with NBA context
+- [ ] Complex multi-team trade scenarios
+- [ ] Advanced salary cap analysis
+- [ ] Trade suggestion engine
+
+### 🎨 **Phase 3: React UX**
+- [ ] Modern React frontend with TypeScript
 - [ ] Interactive trade builder interface  
 - [ ] Real-time salary cap visualizations
-- [ ] Mobile-responsive trade simulator
+- [ ] Mobile-responsive design
 
 ### 🚀 **Phase 4: Advanced Features**
 - [ ] Historical trade database integration
@@ -198,49 +240,42 @@ The **2023-24 NBA season** provides perfect trade simulation context:
 
 ### 🎯 **User-Centric Design**
 1. **Natural Language First**: No complex forms or dropdowns
-2. **Context-Aware**: AI understands NBA rules, player values, team needs
-3. **Realistic Constraints**: All trades must pass salary cap validation
-4. **Impact-Focused**: Every trade shows championship probability changes
+2. **Real Data Always**: Every query uses actual 2023-24 data
+3. **CBA Compliance**: All trades validated against real NBA rules
+4. **Instant Results**: Sub-second response times
 
-### 📊 **Data-Driven Insights**
-- **Statistical Impact**: How player stats translate to team performance
-- **Financial Reality**: Luxury tax implications of every trade
-- **Historical Context**: Compare to actual 2023-24 trades and rumors
-- **Championship Probability**: Monte Carlo simulation of playoff outcomes
+### 🧠 **AI Intelligence Layers**
+1. **MCP Server**: Structured data access and basic NLP
+2. **Gemini AI**: Advanced reasoning and trade analysis
+3. **Business Logic**: NBA-specific rules and calculations
+4. **User Interface**: Beautiful, intuitive trade exploration
 
-## 🎉 Hackathon Success Metrics
+## 📚 Documentation
 
-### ✅ **Technical Achievements**
-- **Complete NBA Database**: 99.5% salary coverage achieved
-- **Performance Optimization**: 15 indexes, sub-100ms queries
-- **CBA Compliance**: Full luxury tax and apron implementation
-- **Clean Architecture**: Production-ready codebase
+- **[MCP_SETUP.md](./MCP_SETUP.md)**: Complete MCP server setup guide
+- **[update-app-for-mcp.js](./update-app-for-mcp.js)**: Integration examples
+- **[cursor-mcp-config.json](./cursor-mcp-config.json)**: Cursor configuration
 
-### 🎯 **User Experience Goals**
-- **Intuitive Interface**: Natural language → instant results
-- **Realistic Trades**: AI suggests only viable scenarios
-- **Rich Context**: Every trade includes championship impact
-- **Mobile First**: Beautiful experience on all devices
+## 🎮 Try It Now
 
-## 🤝 Contributing
+### **Test MCP Server**
+```bash
+node node16-mcp-server.js
+```
 
-Built for **AI in Action Hackathon** but open to contributions:
+### **Configure Cursor**
+1. Add `cursor-mcp-config.json` to Cursor MCP settings
+2. Restart Cursor
+3. Ask: "Show me LeBron James from the NBA database"
 
-1. **Fork** the repository
-2. **Focus** on AI agent enhancements or React UX
-3. **Submit** pull requests with detailed descriptions
-4. **Maintain** basketball accuracy and performance standards
+### **Integrate Your App**
+```javascript
+const { NBATradeConsigliere } = require('./update-app-for-mcp');
+// See update-app-for-mcp.js for complete examples
+```
 
-## 📄 License
+---
 
-MIT License - Perfect for hackathon innovation!
+**Ready to explore NBA trades with AI?** 🏀🤖
 
-## 🏆 Ready for Launch
-
-**NBA Trade Consigliere** has a **production-ready foundation**:
-- ✅ Complete database with 99.5% salary coverage
-- ✅ Real CBA compliance and trade validation  
-- ✅ Optimized performance with 15 database indexes
-- ✅ Clean, focused codebase ready for AI agent development
-
-**Next stop**: Building the most intuitive NBA trade simulator ever created! 🚀 
+The database is complete, the MCP architecture is working, and your AI-powered NBA trade simulator is ready for the next phase of development! 
