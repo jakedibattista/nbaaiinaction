@@ -1,0 +1,38 @@
+steps:
+  # Build the MCP server container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/nba-mcp-server', './mcp-server']
+
+  # Push the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/nba-mcp-server']
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'nba-mcp-server'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/nba-mcp-server'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-secrets'
+      - '/MONGO_URI=MONGO_URI:latest'
+      - '--memory'
+      - '512Mi'
+      - '--cpu'
+      - '1'
+      - '--min-instances'
+      - '1'
+      - '--max-instances'
+      - '5'
+      - '--port'
+      - '8765'
+
+images:
+  - 'gcr.io/$PROJECT_ID/nba-mcp-server' 

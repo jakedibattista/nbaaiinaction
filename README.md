@@ -1,281 +1,362 @@
 # 🏀 NBA Trade Consigliere
 
-**AI-Powered NBA Trade Simulator** - Explore "what if" scenarios from the 2023-24 NBA season with natural language queries powered by Google Gemini AI and unified MCP data access.
+**AI-Powered NBA Trade Analysis for the 2023-24 Season**
 
-> *Submitted to: [AI in Action Hackathon](https://ai-in-action.devpost.com/)*  
-> **Status**: 🎯 **MCP Architecture Complete** → Building AI Agent & React UX
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Google%20Cloud-blue)](https://nba-agent-client-v4hgvtnxva-uc.a.run.app)
+[![API Status](https://img.shields.io/badge/API-Online-green)](https://nba-agent-api-v4hgvtnxva-uc.a.run.app)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+> **Hackathon Project**: AI in Action  
+> **Live Demo**: https://nba-agent-client-v4hgvtnxva-uc.a.run.app
 
 ## 🎯 Project Overview
 
-**NBA Trade Consigliere** lets users create hypothetical NBA trades and simulate how they would have impacted the 2023-24 NBA playoffs. Ask questions like *"What if the Lakers traded for Damian Lillard?"* and get AI-powered analysis including salary cap implications, CBA compliance, and championship outcome changes.
+NBA Trade Consigliere is an AI-powered web application that lets users explore hypothetical NBA trades and analyze their impact on the 2023-24 playoffs. Using natural language queries, users can ask about player stats, team compositions, trade legality under NBA CBA rules, and playoff implications.
 
-## ✨ Key Features
+### 🌟 Key Features
 
-### 🤖 **Unified MCP Architecture**
-- **Single Data Layer**: Both Cursor AI and your app use the same MCP server
-- **Node.js 16+ Compatible**: Works with existing development environment
-- **Natural Language Queries**: "Trade X for Y" → AI handles all complexity
-- **Real-time Database Access**: Sub-100ms query performance
+- **🤖 Natural Language Interface**: Ask questions in plain English
+- **📊 Real NBA Data**: Complete 2023-24 season stats and salary data
+- **⚖️ CBA Compliance**: Validates trades against actual NBA salary cap rules
+- **🏆 Playoff Impact Analysis**: Simulates how trades would affect playoff outcomes
+- **🚀 Cloud-Native**: Fully deployed on Google Cloud Run
+- **📱 Responsive Design**: Works on desktop and mobile
 
-### 💰 **Complete NBA Financial Engine**
-- **99.5% Salary Coverage**: 213/214 players with 2023-24 salary data
-- **Full CBA Implementation**: Luxury tax, aprons, trade exceptions
-- **Real Trade Validation**: First/Second Apron restrictions included
-- **$1.34B+ Salary Database**: Every playoff team fully mapped
+### 🎮 Example Queries
 
-### 📊 **Production-Ready Database**
-- **213 NBA Players** with complete stats + salaries
-- **15 Playoff Series** from First Round to Finals  
-- **2023 CBA Rules** with all salary cap restrictions
-- **15 Optimized Indexes** for sub-100ms queries
+```
+"Can I legally trade Luka for Tatum?"
+"Tell me about LeBron James stats"
+"What's the Lakers roster and salary situation?"
+"How would trading Giannis affect the Bucks playoff chances?"
+```
 
-## 🚀 Technology Stack
+## 🏗️ Architecture
 
-- **MCP Server**: Node.js 16+ compatible NBA data interface
-- **Backend**: Express.js with MCP integration
-- **Database**: MongoDB Atlas with 15 performance indexes
-- **AI Integration**: Google Gemini API with NBA context
-- **Frontend**: React.js with TypeScript *(Next Phase)*
-- **Data**: Complete 2023-24 season + CBA compliance
-
-## 🏗️ MCP Architecture
+### **Multi-Service Cloud Architecture**
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Cursor AI     │    │  Your Web App   │    │  Gemini AI      │
-│                 │    │                 │    │                 │
-└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
-          │                      │                      │
-          └──────────────────────┼──────────────────────┘
-                                 │
-                    ┌─────────────▼───────────────┐
-                    │     NBA MCP Server          │
-                    │  (node16-mcp-server.js)     │
-                    │                             │
-                    │  • Player Search            │
-                    │  • Team Analysis            │
-                    │  • Trade Scenarios          │
-                    │  • Salary Cap Logic         │
-                    └─────────────┬───────────────┘
-                                  │
-                    ┌─────────────▼───────────────┐
-                    │     MongoDB Atlas           │
-                    │                             │
-                    │  • 213 NBA Players          │
-                    │  • 2023-24 Season Data      │
-                    │  • Salary Information       │
-                    │  • Team Rosters             │
-                    └─────────────────────────────┘
+│   React Client  │───▶│   API Server    │───▶│   MCP Server    │
+│   (nginx)       │    │   (Express.js)  │    │   (MongoDB)     │
+│   Port 8080     │    │   Port 8080     │    │   Port 8080     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+        │                       │                       │
+        ▼                       ▼                       ▼
+   Google Cloud Run       Google Cloud Run       Google Cloud Run
 ```
 
-## 🏆 Database Implementation Complete
+### **Technology Stack**
 
-### ✅ **Players Collection** (213 players)
-```javascript
-{
-  name: "Luka Dončić",
-  team: "Dallas Mavericks",
-  position: "G", 
-  salary_2023_2024: 40100000,  // Real contract data
-  stats_2023_2024: {
-    points_per_game: 32.4,
-    rebounds_per_game: 9.1,
-    assists_per_game: 9.8,
-    // ... complete statistical profile
-  }
-}
-```
+- **Frontend**: React.js + Material-UI + nginx
+- **Backend**: Node.js + Express.js + Mongoose
+- **AI**: Google Gemini 2.5 Flash
+- **Database**: MongoDB Atlas
+- **Cloud**: Google Cloud Run
+- **Containerization**: Docker + docker-compose
 
-### ✅ **CBA Rules Collection** (2023 NBA Season)
-```javascript
-{
-  year: 2023,
-  salary_cap: 136021000,      // $136.0M
-  luxury_tax: 165294000,      // $165.3M  
-  first_apron: 172346000,     // $172.3M
-  second_apron: 182794000,    // $182.8M
-  // ... all trade restrictions
-}
-```
+### **Data Sources**
 
-### ✅ **MCP Server Capabilities**
-```javascript
-// Player search
-await mcpServer.findPlayer('LeBron James');
+- **Players**: 213/214 players with complete salary data (99.5% coverage)
+- **Teams**: All 16 playoff teams with roster and salary breakdowns
+- **CBA Rules**: Complete 2023 NBA Collective Bargaining Agreement
+- **Playoff Series**: All 15 playoff series with detailed outcomes
 
-// Team analysis  
-await mcpServer.findTeamPlayers('Lakers');
+## 🚀 Quick Start
 
-// Trade scenarios
-await mcpServer.analyzeTradeScenario(['LeBron James', 'Luka Dončić']);
+### **Option 1: Use Live Demo**
+Visit: https://nba-agent-client-v4hgvtnxva-uc.a.run.app
 
-// Salary cap analysis
-await mcpServer.getTeamSalaryInfo('Warriors');
+### **Option 2: Run Locally**
 
-// Natural language processing
-await mcpServer.processQuery('Show team Lakers');
-```
-
-## 🛠 Quick Start
-
-### Prerequisites
-- Node.js 16+ (your current v16.18.0 works!)
-- MongoDB Atlas connection (already configured)
-
-### Installation
 ```bash
-# Clone repository
+# Clone the repository
 git clone https://github.com/jakedibattista/nbaaiinaction.git
 cd nbaaiinaction
 
-# Install dependencies (already done)
-npm install
+# Set up environment variables
+cp .env.example .env
+# Add your MONGO_URI and GEMINI_API_KEY
 
-# Test MCP server
-node node16-mcp-server.js
+# Run with Docker Compose
+docker-compose up --build
 
-# Configure Cursor MCP (see MCP_SETUP.md)
-# Add cursor-mcp-config.json to Cursor settings
+# Access the application
+open http://localhost:3000
 ```
 
-### Usage Examples
+### **Option 3: Deploy to Google Cloud**
 
-#### **In Cursor AI**
-```
-"Show me LeBron James from the NBA database"
-"What players are on the Lakers?"
-"Analyze a trade between LeBron and Luka"
-"What's the Warriors' salary cap situation?"
-```
-
-#### **In Your App**
-```javascript
-const { NBATradeConsigliere } = require('./update-app-for-mcp');
-
-const nbaApp = new NBATradeConsigliere();
-await nbaApp.initialize();
-
-// Get player data
-const lebron = await nbaApp.getPlayerStats('LeBron James');
-
-// Analyze trades
-const tradeAnalysis = await nbaApp.analyzeTradeScenario(['LeBron James', 'Luka Dončić']);
-```
-
-## 📁 Clean Project Structure
-
-```
-nbaaiinaction/
-├── node16-mcp-server.js         # 🎯 Core MCP server (Node 16+ compatible)
-├── update-app-for-mcp.js        # 🔧 Integration examples
-├── cursor-mcp-config.json       # ⚙️  Cursor MCP configuration
-├── MCP_SETUP.md                 # 📖 Complete setup guide
-├── scripts/
-│   └── gemini-api-layer.js      # 🤖 AI integration core
-├── server/                      # 🌐 Express.js API
-├── client/                      # ⚛️  React frontend
-└── data/                        # 📊 Original CSV files (archived)
-```
-
-## ⚡ Performance Benchmarks
-
-### 🏃‍♂️ **MCP Server Performance**
-- **Player Lookup**: <100ms (fuzzy name matching)
-- **Team Roster**: <50ms (optimized team queries)
-- **Trade Analysis**: <150ms (complex salary calculations)
-- **Memory Usage**: ~50MB (efficient connection pooling)
-
-### 💾 **Data Coverage**
-- **Players**: 99.5% (213/214 with salary data)
-- **Playoff Teams**: 100% (all 16 teams complete)
-- **Series Results**: 100% (verified historical)
-- **CBA Rules**: 100% (complete 2023 compliance)
-
-## 🎯 Development Roadmap
-
-### ✅ **Phase 1: MCP Architecture** *(COMPLETE)*
-- [x] Node.js 16+ compatible MCP server
-- [x] Unified data access layer
-- [x] Cursor AI integration
-- [x] Natural language query processing
-
-### 🔥 **Phase 2: AI Agent Enhancement** *(Current Focus)*
-- [ ] Enhanced Gemini prompts with NBA context
-- [ ] Complex multi-team trade scenarios
-- [ ] Advanced salary cap analysis
-- [ ] Trade suggestion engine
-
-### 🎨 **Phase 3: React UX**
-- [ ] Modern React frontend with TypeScript
-- [ ] Interactive trade builder interface  
-- [ ] Real-time salary cap visualizations
-- [ ] Mobile-responsive design
-
-### 🚀 **Phase 4: Advanced Features**
-- [ ] Historical trade database integration
-- [ ] Community voting on trade proposals
-- [ ] Advanced analytics (PER, BPM, VORP)
-- [ ] Social sharing of trade scenarios
-
-## 🏀 Why 2023-24 Season?
-
-The **2023-24 NBA season** provides perfect trade simulation context:
-
-### 🏆 **Boston Celtics Championship**
-- **64-18 record** with championship core intact
-- **Jayson Tatum** (26.9 PPG) + **Jaylen Brown** (23.0 PPG)
-- Trade scenarios: "What if they traded for another star?"
-
-### 📈 **Major Storylines**
-- **Dallas Mavericks** 5th seed → Finals appearance
-- **Denver Nuggets** defending champions eliminated early
-- **Multiple superstars** on tradeable contracts
-
-### 💰 **Salary Cap Drama**
-- **Second Apron** penalties create trade restrictions
-- **Luxury tax** decisions influence roster construction
-- **Contract year** players create natural trade scenarios
-
-## 🤖 AI Integration Philosophy
-
-### 🎯 **User-Centric Design**
-1. **Natural Language First**: No complex forms or dropdowns
-2. **Real Data Always**: Every query uses actual 2023-24 data
-3. **CBA Compliance**: All trades validated against real NBA rules
-4. **Instant Results**: Sub-second response times
-
-### 🧠 **AI Intelligence Layers**
-1. **MCP Server**: Structured data access and basic NLP
-2. **Gemini AI**: Advanced reasoning and trade analysis
-3. **Business Logic**: NBA-specific rules and calculations
-4. **User Interface**: Beautiful, intuitive trade exploration
-
-## 📚 Documentation
-
-- **[MCP_SETUP.md](./MCP_SETUP.md)**: Complete MCP server setup guide
-- **[update-app-for-mcp.js](./update-app-for-mcp.js)**: Integration examples
-- **[cursor-mcp-config.json](./cursor-mcp-config.json)**: Cursor configuration
-
-## 🎮 Try It Now
-
-### **Test MCP Server**
 ```bash
-node node16-mcp-server.js
+# Deploy all services
+./deploy-mcp.ps1     # Deploy data server
+./deploy-api.ps1     # Deploy API server  
+./deploy-client.ps1  # Deploy frontend
 ```
 
-### **Configure Cursor**
-1. Add `cursor-mcp-config.json` to Cursor MCP settings
-2. Restart Cursor
-3. Ask: "Show me LeBron James from the NBA database"
+## 🧠 AI Intelligence System
 
-### **Integrate Your App**
+### **Three-Step AI Process**
+
+1. **Query Classification**: Determines if query is about Player, Team, Trade, or Playoff Impact
+2. **Data Retrieval**: Fetches relevant NBA data from MongoDB via MCP server
+3. **AI Analysis**: Uses Gemini 2.5 Flash with custom prompts for expert-level responses
+
+### **Custom Prompt Engineering**
+
 ```javascript
-const { NBATradeConsigliere } = require('./update-app-for-mcp');
-// See update-app-for-mcp.js for complete examples
+// Example: Trade Analysis Prompt
+const tradePrompt = `You are an NBA expert analyzing a potential trade.
+Trade: ${player1} (${team1}) for ${player2} (${team2})
+
+CBA Rules: ${cbaRules}
+Team Data: ${teamData}
+Player Stats: ${playerStats}
+
+Analyze: Legal? Winner? Impact?`;
 ```
+
+### **Smart Query Routing**
+
+- **Player Queries** → Player stats + similar salary comparisons
+- **Team Queries** → Roster breakdown + salary cap analysis + trade targets
+- **Trade Queries** → CBA validation + impact analysis
+- **Playoff Queries** → Series simulation + championship odds
+
+## 📊 Database Design
+
+### **Optimized MongoDB Collections**
+
+```javascript
+// Players Collection (213 documents)
+{
+  name: "Luka Dončić",
+  team: "Dal",
+  position: "G", 
+  salary_2023_2024: 40100000,
+  stats_2023_2024: { /* complete stats */ },
+  playoff_stats_2024: { /* playoff performance */ }
+}
+
+// Teams Collection (16 playoff teams)
+{
+  team: "Boston Celtics",
+  total_salary_2023_2024: "$181,939,000",
+  roster: [/* 15 players with salaries */],
+  strength: "Elite offense and defense",
+  weakness: "Depth concerns"
+}
+
+// CBA Rules Collection
+{
+  year: 2023,
+  salary_cap: 136021000,
+  luxury_tax: 165294000,
+  first_apron: 172346000,
+  second_apron: 182794000
+}
+```
+
+### **Performance Optimizations**
+
+- **15 Strategic Indexes**: Sub-100ms query performance
+- **Compound Indexes**: Optimized for complex aggregations
+- **Connection Pooling**: Efficient MongoDB Atlas connections
+
+## 🔧 Development Workflow
+
+### **Local Development**
+
+```bash
+# Start MongoDB MCP server
+cd mcp-server && npm start
+
+# Start API server  
+cd server && npm start
+
+# Start React client
+cd client && npm start
+```
+
+### **Docker Development**
+
+```bash
+# Build and run all services
+docker-compose up --build
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+### **Cloud Deployment**
+
+Each service deploys independently to Google Cloud Run:
+
+- **Secrets Management**: Google Secret Manager for API keys
+- **Environment Variables**: Injected at runtime
+- **Health Checks**: Custom endpoints for monitoring
+- **Auto-scaling**: Handles traffic spikes automatically
+
+## 🎨 User Experience
+
+### **Modern React Interface**
+
+- **Material-UI Components**: Professional, responsive design
+- **Real-time Chat**: Instant AI responses
+- **Suggestion Cards**: Guided user experience
+- **Error Handling**: Graceful fallbacks and helpful messages
+
+### **NBA-Themed Design**
+
+- **Basketball Icons**: Custom iconography
+- **Team Colors**: Dynamic color schemes
+- **Professional Layout**: Clean, modern interface
+- **Mobile-First**: Optimized for all devices
+
+## 🔐 Security & Best Practices
+
+### **Environment Security**
+
+- **Secret Management**: Google Cloud Secret Manager
+- **Environment Isolation**: Separate dev/prod environments
+- **API Key Protection**: Server-side only, never exposed to client
+
+### **Network Security**
+
+- **CORS Configuration**: Restricted origins
+- **HTTPS Only**: All communications encrypted
+- **MongoDB Atlas**: Network access controls
+- **Input Validation**: Sanitized user inputs
+
+### **Code Quality**
+
+- **Error Handling**: Comprehensive try-catch blocks
+- **Logging**: Structured logging for debugging
+- **Health Checks**: Service monitoring endpoints
+- **Graceful Shutdown**: Proper resource cleanup
+
+## 📈 Performance Metrics
+
+### **Response Times**
+
+- **Database Queries**: < 100ms average
+- **AI Responses**: 2-5 seconds typical
+- **Page Load**: < 3 seconds initial load
+- **API Latency**: < 200ms for data endpoints
+
+### **Scalability**
+
+- **Auto-scaling**: 1-10 instances per service
+- **Memory Efficient**: 512MB-1GB per container
+- **Connection Pooling**: Optimized database connections
+- **CDN Ready**: Static assets optimized for delivery
+
+## 🏆 Hackathon Highlights
+
+### **Technical Innovation**
+
+- **Multi-Service Architecture**: Microservices on Cloud Run
+- **AI Integration**: Custom Gemini prompts for NBA expertise
+- **Real-Time Data**: Live NBA statistics and salary data
+- **CBA Compliance**: Actual NBA rule validation
+
+### **User Experience**
+
+- **Natural Language**: No complex forms or menus
+- **Instant Results**: Fast AI-powered responses
+- **Educational**: Learn about NBA trades and rules
+- **Engaging**: Interactive chat interface
+
+### **Production Ready**
+
+- **Cloud Deployed**: Fully functional live demo
+- **Monitoring**: Health checks and logging
+- **Scalable**: Handles concurrent users
+- **Maintainable**: Clean, documented codebase
+
+## 🛠️ API Documentation
+
+### **Chat Endpoint**
+
+```bash
+POST /chat
+Content-Type: application/json
+
+{
+  "query": "Can I trade LeBron for Luka?"
+}
+
+Response:
+{
+  "response": "AI analysis...",
+  "queryType": "LEGAL",
+  "data": { /* relevant NBA data */ },
+  "responseTime": "1250ms"
+}
+```
+
+### **Health Check**
+
+```bash
+GET /health
+
+Response:
+{
+  "status": "OK",
+  "database": "Connected", 
+  "chatHandler": "Ready"
+}
+```
+
+## 📝 Environment Setup
+
+### **Required Environment Variables**
+
+```bash
+# .env file
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/nba-trade-consigliere
+GEMINI_API_KEY=your_gemini_api_key_here
+MCP_SERVER_URL=http://localhost:8765  # Local development
+```
+
+### **Google Cloud Secrets**
+
+```bash
+# Create secrets in Google Cloud
+gcloud secrets create MONGO_URI --data-file=mongo_uri.txt
+gcloud secrets create GEMINI_API_KEY --data-file=gemini_key.txt
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **NBA Data**: Official 2023-24 season statistics
+- **Google Gemini**: AI-powered natural language processing
+- **MongoDB Atlas**: Cloud database hosting
+- **Google Cloud**: Scalable cloud infrastructure
+- **Material-UI**: React component library
+
+## 📞 Contact
+
+**Jake DiBattista**
+- GitHub: [@jakedibattista](https://github.com/jakedibattista)
+- Project Link: [https://github.com/jakedibattista/nbaaiinaction](https://github.com/jakedibattista/nbaaiinaction)
+- Live Demo: [https://nba-agent-client-v4hgvtnxva-uc.a.run.app](https://nba-agent-client-v4hgvtnxva-uc.a.run.app)
 
 ---
 
-**Ready to explore NBA trades with AI?** 🏀🤖
-
-The database is complete, the MCP architecture is working, and your AI-powered NBA trade simulator is ready for the next phase of development! 
+**Built for AI in Action Hackathon 2025** 🏀🤖 

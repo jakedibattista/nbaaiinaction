@@ -15,17 +15,36 @@ if (!globalThis.fetch) {
  * 3. Trade Analysis: "LeBron for Luka" → CBA check + impact
  */
 
-require('dotenv').config();
+// Load environment variables - handle both local and Cloud Run environments
+try {
+  require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+} catch (error) {
+  // In Cloud Run, environment variables are provided directly, so .env file may not exist
+  console.log('No .env file found, using environment variables from runtime');
+}
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const mongoose = require('mongoose');
 const SimplifiedNBAChatHandler = require('./simplified-chat-handler');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
+
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-05-20" });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:8080',
+    process.env.CLIENT_URL || 'https://your-client-url.run.app',
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -35,11 +54,24 @@ let chatHandler = null;
 // MongoDB connection
 const connectDB = async () => {
   try {
-    // Ensure the MONGODB_URI is loaded
-    if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI is not defined in the .env file.');
+    // Ensure the MONGO_URI is loaded
+    if (!process.env.MONGO_URI) {
+      console.error('MONGO_URI is not defined in environment variables.');
+      return false;
     }
-    await mongoose.connect(process.env.MONGODB_URI);
+
+    // Log connection attempt
+    console.log('Attempting to connect to MongoDB...');
+    
+    // Connect with options for better reliability
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      family: 4,
+      maxPoolSize: 10,
+      retryWrites: true
+    });
+    
     console.log('✅ Connected to MongoDB Atlas - NBA Trade Consigliere Database');
     
     // Initialize simplified chat handler after DB connection
@@ -48,10 +80,17 @@ const connectDB = async () => {
       process.env.GEMINI_API_KEY
     );
     console.log('✅ Simplified NBA Chat Handler initialized');
+    return true;
     
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error.message);
-    process.exit(1);
+    console.error('Connection details:', {
+      uri: process.env.MONGO_URI ? 'URI is set' : 'URI is missing',
+      nodeEnv: process.env.NODE_ENV,
+      port: process.env.PORT
+    });
+    console.log('Server will continue running without database connection');
+    return false;
   }
 };
 
@@ -65,8 +104,20 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Simplified chat endpoint - handles all 3 main scenarios
-app.post('/api/chat', async (req, res) => {
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'NBA Trade Consigliere API Server',
+    status: 'running',
+    timestamp: new Date().toISOString(),
+    endpoints: ['/health', '/chat'],
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+    chatHandler: chatHandler ? 'Ready' : 'Not Ready'
+  });
+});
+
+// Chat endpoint
+app.post('/chat', async (req, res) => {
   const startTime = Date.now();
   
   try {
@@ -74,16 +125,19 @@ app.post('/api/chat', async (req, res) => {
     console.log(`\n[${new Date().toISOString()}] 🚀 Received query: "${query}"`);
     
     if (!query) {
+      console.log('[ERROR] No query provided in request body');
       return res.status(400).json({ error: 'Query is required' });
     }
 
     if (!chatHandler) {
+      console.log('[ERROR] Chat handler not initialized');
       return res.status(503).json({ 
         error: 'Chat service is initializing, please try again in a moment'
       });
     }
 
     // Process the chat using our simplified handler
+    console.log('[DEBUG] Starting chat processing...');
     const result = await chatHandler.processChat(query);
     console.log(`[${new Date().toISOString()}] ✨ Chat handler processed. Success: ${result.success}`);
 
@@ -94,12 +148,13 @@ app.post('/api/chat', async (req, res) => {
     const responseTime = Date.now() - startTime;
     
     if (result.success) {
+      console.log('[DEBUG] Sending successful response');
       res.json({
         response: result.response,
-        queryType: result.queryType,
+        queryType: result.queryType.type,
         data: result.data,
         responseTime: `${responseTime}ms`,
-        source: 'gemini-1.5-pro-latest'
+        source: 'gemini-2.5-flash-preview-05-20'
       });
     } else {
       console.error(`[${new Date().toISOString()}] ❌ Error from chat handler:`, result.error);
@@ -109,82 +164,54 @@ app.post('/api/chat', async (req, res) => {
         responseTime: `${responseTime}ms`
       });
     }
-
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] 💥 FATAL ERROR in /api/chat:`, error);
-    res.status(500).json({ 
-      error: 'Failed to process chat',
-      details: error.message 
+    console.error(`[${new Date().toISOString()}] 💥 Error in chat endpoint:`, error);
+    res.status(500).json({
+      error: error.message,
+      response: "I encountered an error processing your request. Please try again."
     });
   }
 });
 
-// Simple database query endpoints (can be removed if not used by a frontend)
-app.get('/api/teams', async (req, res) => {
+// Start the server
+const startServer = async () => {
   try {
-    const teams = await mongoose.connection.db.collection('players')
-      .distinct('team', { active: true });
-    res.json({ teams: teams.filter(t => t).sort() });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch teams' });
-  }
-});
-
-app.get('/api/players/:team?', async (req, res) => {
-  try {
-    const team = req.params.team || req.query.team;
-    const query = team ? { team: team, active: true } : { active: true };
+    console.log('🚀 Starting NBA Trade Consigliere API Server...');
+    console.log('Environment check:');
+    console.log('- PORT:', PORT);
+    console.log('- MONGO_URI:', process.env.MONGO_URI ? 'Set' : 'Missing');
+    console.log('- GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? 'Set' : 'Missing');
+    console.log('- MCP_SERVER_URL:', process.env.MCP_SERVER_URL || 'Not set');
     
-    const players = await mongoose.connection.db.collection('players')
-      .find(query)
-      .project({ 
-        name: 1, 
-        team: 1, 
-        position: 1, 
-        salary_2023_2024: 1, 
-        stats_2023_2024: 1 
-      })
-      .sort({ salary_2023_2024: -1 })
-      .limit(50)
-      .toArray();
-    
-    res.json({ players });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch players' });
-  }
-});
-
-// Connect to database and start server
-async function startServer() {
-  try {
-    await connectDB();
-    
-    const server = app.listen(PORT, () => {
-      console.log(`🚀 NBA Trade Consigliere API running on port ${PORT}`);
-      console.log(`🤖 Powered by Gemini 1.5 Pro`);
-      console.log(`📊 Database: 2023-24 NBA Season (Complete)`);
-      console.log(`🎯 Optimized for 3 scenarios: Player, Team, & Trade Analysis`);
+    // Start server first, then connect to MongoDB
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 NBA Trade Consigliere API Server listening on http://0.0.0.0:${PORT}`);
+      console.log('🤖 Powered by Gemini 2.5 Flash');
+      console.log('Health check available at /health');
     });
-
-    const gracefulShutdown = (signal) => {
-      console.log(`\n[${new Date().toISOString()}] Received ${signal}. Shutting down gracefully...`);
+    
+    // Connect to MongoDB in background
+    connectDB().catch(error => {
+      console.error('MongoDB connection failed, but server is still running:', error);
+    });
+    
+    // Handle graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received, shutting down gracefully');
       server.close(() => {
-        console.log(`[${new Date().toISOString()}] ✅ HTTP server closed.`);
-        mongoose.connection.close(false, () => {
-          console.log(`[${new Date().toISOString()}] ✅ MongoDB connection closed.`);
-          process.exit(0);
-        });
+        console.log('Server closed');
+        if (mongoose.connection.readyState === 1) {
+          mongoose.connection.close();
+        }
+        process.exit(0);
       });
-    };
-
-    // Listen for termination signals
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
+    });
+    
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
-}
+};
 
-startServer(); 
+// Start the server
+startServer();
